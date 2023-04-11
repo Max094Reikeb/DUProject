@@ -31,7 +31,7 @@ def extract_metadata(file_path: str) -> Union[None, dict]:
         return None
 
 
-def main():
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Extraction des métadonnées d'un fichier MP3 ou FLAC.")
     parser.add_argument('-f', '--file', type=str, required=True, help='Chemin d\'accès au fichier MP3 ou FLAC')
     args = parser.parse_args()
@@ -44,7 +44,3 @@ def main():
             print("Métadonnées extraites :")
             for key, value in metadata.items():
                 print(f"{key}: {value}")
-
-
-if __name__ == '__main__':
-    main()
