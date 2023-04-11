@@ -1,41 +1,50 @@
 import argparse
-from mutagen.easyid3 import EasyID3
-from mutagen.flac import FLAC
+from typing import Union
+
+from tinytag import TinyTag
 
 
-def get_metadata(filename: str):
+def extract_metadata(file_path: str) -> Union[None, dict]:
     """
-    Extrait les métadonnées d'un fichier MP3 ou FLAC et le retourne en un dictionnaire.
+    Fonction pour extraire les métadonnées d'un fichier MP3 ou FLAC.
 
-    Args:
-        filepath (str): Chemin du fichier d'entrée.
-
-    Returns:
-        dict: Un dictionnaire contenant les métadonnées extraites du fichier.
+    :param file_path: Chemin d'accès au fichier MP3 ou FLAC.
+    :return: Un dictionnaire contenant les métadonnées si le fichier est valide, sinon None.
     """
+    try:
+        tag = TinyTag.get(file_path)
 
-    if filename.endswith('.mp3'):
-        audio = EasyID3(filename)
-    elif filename.endswith('.flac'):
-        audio = FLAC(filename)
-    else:
-        raise ValueError('Format de fichier non supporté.')
+        metadata = {
+            'title': tag.title,
+            'artist': tag.artist,
+            'album': tag.album,
+            'duration': tag.duration,
+            'genre': tag.genre,
+            'track_number': tag.track,
+            'year': tag.year,
+        }
 
-    return {'title': audio['title'][0] if 'title' in audio else None,
-            'artist': audio['artist'][0] if 'artist' in audio else None,
-            'album': audio['album'][0] if 'album' in audio else None,
-            'year': audio['date'][0] if 'date' in audio else None}
+        return metadata
+
+    except Exception as e:
+        print(f"Erreur lors de l'extraction des métadonnées: {e}")
+        return None
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Extraire les métadonnées d\'un fichier MP3 ou FLAC.')
-    parser.add_argument('-f', '--file', type=str, help='Le fichier dont on veut extraire les métadonnées.',
-                        required=True)
+def main():
+    parser = argparse.ArgumentParser(description="Extraction des métadonnées d'un fichier MP3 ou FLAC.")
+    parser.add_argument('-f', '--file', type=str, required=True, help='Chemin d\'accès au fichier MP3 ou FLAC')
     args = parser.parse_args()
 
     if args.file is None:
         print('Veuillez spécifier un fichier avec l\'option -f.')
     else:
-        metadata = get_metadata(args.file)
-        for key, value in metadata:
-            print(f'{key}: {value}')
+        metadata = extract_metadata(args.file)
+        if metadata:
+            print("Métadonnées extraites :")
+            for key, value in metadata.items():
+                print(f"{key}: {value}")
+
+
+if __name__ == '__main__':
+    main()

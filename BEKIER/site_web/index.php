@@ -1,5 +1,5 @@
 <?php
-// API KEY
+// Clé API
 $api_key = '1c4adc203d26c4d319d106e37bd94148';
 
 // Récupération des données d'entrée (régions, départements, villes)
