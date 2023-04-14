@@ -1,3 +1,4 @@
 Projet : Web
 Membre du projet : BEKIER Maxence
-Informations utiles : aucune pour le moment
+Informations utiles :
+    - Il faut avoir la librairie JQuery

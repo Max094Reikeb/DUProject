@@ -12,13 +12,17 @@
 
 <!-- Formulaire pour sélectionner le département et la ville -->
 <form id="form-meteo" action="meteo.php" method="post">
-    <div id="select-departement">
-        <!-- Le contenu sera ajouté en JavaScript -->
+    <div id="select-department">
+        <select>
+            <option value="">Sélectionnez un département</option>
+        </select>
     </div>
     <div id="select-ville">
-        <!-- Le contenu sera ajouté en JavaScript -->
+        <select disabled>
+            <option value="">Sélectionnez une ville</option>
+        </select>
     </div>
-    <input type="submit" value="Voir la météo">
+    <input type="submit" value="Voir la météo" disabled>
 </form>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
