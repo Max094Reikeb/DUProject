@@ -151,15 +151,15 @@ const regions = {
 
 function updateDepartements(region) {
     const departements = regions[region].departements;
-    let options = '<select name="departement"><option value="">Sélectionnez un département</option>';
+    let options = '<option value="">Sélectionnez un département</option>';
 
-    for (const [code, nom] in Object.entries(departements)) {
+    for (const [code, nom] of Object.entries(departements)) {
         options += `<option value="${code}">${nom}</option>`;
     }
 
     options += '</select>';
 
-    document.getElementById('select-departement').innerHTML = options;
+    document.getElementById('select-department').innerHTML = options;
 }
 
 document.querySelectorAll('area').forEach(area => {
