@@ -20,6 +20,8 @@ h1 {
 
 img[usemap] {
     margin-right: 20px;
+    width: 750px;
+    height: auto;
 }
 
 input[type="submit"] {
