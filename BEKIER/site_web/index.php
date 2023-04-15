@@ -7,8 +7,8 @@
 </head>
 <body>
 <h1>Prévisions météo en France</h1>
-<!-- Ajout de la carte avec les régions -->
 <div class="container">
+    <!-- On affiche la carte de la France avec les régions -->
     <?php include 'carte.php'; ?>
 
     <!-- Formulaire pour sélectionner le département et la ville -->

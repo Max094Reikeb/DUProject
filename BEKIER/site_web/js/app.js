@@ -4,6 +4,7 @@ $(document).ready(function () {
     const $selectVille = $('#select-ville select');
     const $submitButton = $('#form-meteo input[type="submit"]');
 
+    // Fonction permettant d'obtenir les villes d'un département, avec l'API geo.api.gouv.fr
     function updateVilles(departmentCode) {
         const url = `https://geo.api.gouv.fr/departements/${departmentCode}/communes?fields=nom`;
 

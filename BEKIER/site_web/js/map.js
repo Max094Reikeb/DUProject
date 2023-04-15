@@ -1,3 +1,4 @@
+// Fonction permettant d'obtenir les départements d'une région, avec l'API geo.api.gouv.fr
 function updateDepartements(region) {
     const url = `https://geo.api.gouv.fr/regions/${region}/departements?fields=nom,code`;
 
