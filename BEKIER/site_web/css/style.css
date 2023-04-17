@@ -1,21 +1,32 @@
 /* Styles généraux pour le site */
+html, body {
+    height: 100%;
+}
+
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     background-color: #f4f4f4;
+    margin: 0;
 }
 
 #select-department, #select-ville, #form-meteo input[type="submit"] {
     margin-bottom: 20px;
+    text-align: center;
 }
 
 h1 {
     font-size: 2rem;
     text-align: center;
+    margin-bottom: 20px;
 }
 
 .container {
+    max-width: 80%;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
 }
 
 img[usemap] {
