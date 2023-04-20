@@ -8,25 +8,48 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 from tinytag import TinyTag
 
 
-def extract_metadata(file_path: str) -> Union[None, dict]:
+class Metadata:
+    def __init__(self, title: str, artist: str, album: str, duration: float, genre: str, track_number: int,
+                 year: int, ):
+        self.title = title
+        self.artist = artist
+        self.album = album
+        self.duration = duration
+        self.genre = genre
+        self.track_number = track_number
+        self.year = year
+
+    def __str__(self):
+        return (
+            f"title: {self.title}\n"
+            f"artist: {self.artist}\n"
+            f"album: {self.album}\n"
+            f"duration: {self.duration}\n"
+            f"genre: {self.genre}\n"
+            f"track_number: {self.track_number}\n"
+            f"year: {self.year}"
+        )
+
+
+def extract_metadata(file_path: str) -> Union[None, Metadata]:
     """
     Fonction pour extraire les métadonnées d'un fichier MP3 ou FLAC.
 
     :param file_path: Chemin d'accès au fichier MP3 ou FLAC.
-    :return: Un dictionnaire contenant les métadonnées si le fichier est valide, sinon None.
+    :return: Une instance de la classe Metadata contenant les métadonnées si le fichier est valide, sinon None.
     """
     try:
         tag = TinyTag.get(file_path)
 
-        metadata = {
-            'title': tag.title,
-            'artist': tag.artist,
-            'album': tag.album,
-            'duration': tag.duration,
-            'genre': tag.genre,
-            'track_number': tag.track,
-            'year': tag.year,
-        }
+        metadata = Metadata(
+            title=tag.title,
+            artist=tag.artist,
+            album=tag.album,
+            duration=tag.duration,
+            genre=tag.genre,
+            track_number=tag.track,
+            year=tag.year,
+        )
 
         return metadata
 
@@ -144,9 +167,7 @@ def main():
             if metadata:
                 print(f"Fichier: {args.file}")
                 print("Métadonnées extraites :")
-                for key, value in metadata.items():
-                    print(f"{key}: {value}")
-                print("\n")
+                print(metadata)
 
 
 if __name__ == '__main__':
