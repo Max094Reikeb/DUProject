@@ -31,6 +31,37 @@ def extract_metadata(file_path: str) -> Union[None, dict]:
         print(f"Erreur lors de l'extraction des métadonnées: {e}")
         return None
 
+def create_xspf_playlist(music_files: List[str], output_path: str):
+    """
+    Cette méthode crée une playlist XSPF à partir d'une liste de fichiers musicaux et enregistre la playlist
+    dans un fichier spécifié par output_path.
+
+    Args:
+    music_files (List[str]): Une liste de chemins de fichiers musicaux à inclure dans la playlist.
+    output_path (str): Le chemin d'accès du fichier où la playlist XSPF sera enregistrée.
+
+    """
+    playlist = Element("playlist", version="1", xmlns="http://xspf.org/ns/0/")
+    track_list = SubElement(playlist, "trackList")
+
+    for music_file in music_files:
+        metadata = extract_metadata(music_file)
+        if metadata:
+            track = SubElement(track_list, "track")
+            SubElement(track, "location").text = music_file
+            SubElement(track, "title").text = metadata["title"]
+            SubElement(track, "creator").text = metadata["artist"]
+            SubElement(track, "album").text = metadata["album"]
+            SubElement(track, "duration").text = str(int(metadata["duration"] * 1000))
+            SubElement(track, "trackNum").text = str(metadata["track_number"])
+            SubElement(track, "meta", rel="year").text = metadata["year"]
+            SubElement(track, "meta", rel="genre").text = metadata["genre"]
+
+    pretty_playlist = minidom.parseString(tostring(playlist, "utf-8")).toprettyxml(indent="  ")
+
+    with open(output_path, "w", encoding="utf-8") as output_file:
+        output_file.write(pretty_playlist)
+
 class MusicFileExplorer:
     def __init__(self, root_directory):
         self.root_directory = root_directory
@@ -77,36 +108,6 @@ class MusicFileExplorer:
         """
         return self.music_files
 
-def create_xspf_playlist(music_files: List[str], output_path: str):
-        """
-    Cette méthode crée une playlist XSPF à partir d'une liste de fichiers musicaux et enregistre la playlist
-    dans un fichier spécifié par output_path.
-
-    Args:
-        music_files (List[str]): Une liste de chemins de fichiers musicaux à inclure dans la playlist.
-        output_path (str): Le chemin d'accès du fichier où la playlist XSPF sera enregistrée.
-
-    """
-    playlist = Element("playlist", version="1", xmlns="http://xspf.org/ns/0/")
-    track_list = SubElement(playlist, "trackList")
-
-    for music_file in music_files:
-        metadata = extract_metadata(music_file)
-        if metadata:
-            track = SubElement(track_list, "track")
-            SubElement(track, "location").text = music_file
-            SubElement(track, "title").text = metadata["title"]
-            SubElement(track, "creator").text = metadata["artist"]
-            SubElement(track, "album").text = metadata["album"]
-            SubElement(track, "duration").text = str(int(metadata["duration"] * 1000))
-            SubElement(track, "trackNum").text = str(metadata["track_number"])
-            SubElement(track, "meta", rel="year").text = metadata["year"]
-            SubElement(track, "meta", rel="genre").text = metadata["genre"]
-
-    pretty_playlist = minidom.parseString(tostring(playlist, "utf-8")).toprettyxml(indent="  ")
-
-    with open(output_path, "w", encoding="utf-8") as output_file:
-        output_file.write(pretty_playlist)
 
 def main():
     parser = argparse.ArgumentParser(description="Explorer et extraire les métadonnées des fichiers musicaux.")
@@ -143,10 +144,6 @@ def main():
                 for key, value in metadata.items():
                     print(f"{key}: {value}")
                 print("\n")
-
-            if args.output is not None:
-                create_xspf_playlist([args.file], args.output)
-
 
 if __name__ == '__main__':
     main()
