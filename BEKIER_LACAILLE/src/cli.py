@@ -1,14 +1,17 @@
 import argparse
-import os
 import mimetypes
+import os
 from typing import Union, List
-from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 from xml.dom import minidom
+from xml.etree.ElementTree import Element, SubElement, tostring
+
 from tinytag import TinyTag
+
 
 def extract_metadata(file_path: str) -> Union[None, dict]:
     """
     Fonction pour extraire les métadonnées d'un fichier MP3 ou FLAC.
+
     :param file_path: Chemin d'accès au fichier MP3 ou FLAC.
     :return: Un dictionnaire contenant les métadonnées si le fichier est valide, sinon None.
     """
@@ -31,15 +34,14 @@ def extract_metadata(file_path: str) -> Union[None, dict]:
         print(f"Erreur lors de l'extraction des métadonnées: {e}")
         return None
 
+
 def create_xspf_playlist(music_files: List[str], output_path: str):
     """
-    Cette méthode crée une playlist XSPF à partir d'une liste de fichiers musicaux et enregistre la playlist
-    dans un fichier spécifié par output_path.
+    Fonction pour créer une playlist XSPF à partir d'une liste de fichiers musicaux, et enregistrer la playlist
+    dans un fichier spécifié.
 
-    Args:
-    music_files (List[str]): Une liste de chemins de fichiers musicaux à inclure dans la playlist.
-    output_path (str): Le chemin d'accès du fichier où la playlist XSPF sera enregistrée.
-
+    :param music_files: Liste de chemins de fichiers musicaux à inclure dans la playlist.
+    :param output_path: Chemin d'accès du fichier où la playlist XSPF sera enregistrée.
     """
     playlist = Element("playlist", version="1", xmlns="http://xspf.org/ns/0/")
     track_list = SubElement(playlist, "trackList")
@@ -62,6 +64,24 @@ def create_xspf_playlist(music_files: List[str], output_path: str):
     with open(output_path, "w", encoding="utf-8") as output_file:
         output_file.write(pretty_playlist)
 
+
+def is_music_file(file_path):
+    """
+    Fonction pour vérifier si un fichier est de type musical en se basant sur son extension et son type MIME.
+
+    :param file_path: Le chemin du fichier à vérifier.
+    :return: True si le fichier est un fichier musical (.mp3 ou .flac), False sinon.
+    """
+    file_ext = os.path.splitext(file_path)[1].lower()
+
+    mime_type = mimetypes.guess_type(file_path)[0]
+
+    if file_ext in ['.mp3', '.flac'] and mime_type is not None and mime_type.startswith('audio/'):
+        return True
+
+    return False
+
+
 class MusicFileExplorer:
     def __init__(self, root_directory):
         self.root_directory = root_directory
@@ -69,42 +89,25 @@ class MusicFileExplorer:
 
     def explore_directory(self, directory=None):
         """
-        Méthode pour explorer un répertoire et collecter les chemins des fichiers de musique (MP3 ou FLAC) qu'il contient.
-        Cette méthode est récursive, c'est-à-dire qu'elle parcourt également tous les sous-répertoires du répertoire donné.
+        Fonction pour explorer un répertoire et collecter les chemins des fichiers de musique (MP3 ou FLAC) qu'il contient.
+        Cette fonction est récursive, c'est-à-dire qu'elle parcourt également tous les sous-répertoires du répertoire donné.
+
         :param directory: Le répertoire à explorer. Si None, utilise le répertoire racine de l'objet.
         """
-
         if directory is None:
             directory = self.root_directory
 
         for entry in os.scandir(directory):
-            if entry.is_file() and self.is_music_file(entry.path):
+            if entry.is_file() and is_music_file(entry.path):
                 self.music_files.append(entry.path)
             elif entry.is_dir():
                 self.explore_directory(entry.path)
 
-    def is_music_file(self, file_path):
-        """
-        Cette fonction vérifie si un fichier est de type musical en se basant sur son extension et son type MIME.
-        Args:
-            file_path (str): Le chemin du fichier à vérifier.
-        Returns:
-            bool: True si le fichier est un fichier musical (.mp3 ou .flac), False sinon.
-        """
-        file_ext = os.path.splitext(file_path)[1].lower()
-
-        mime_type = mimetypes.guess_type(file_path)[0]
-
-        if file_ext in ['.mp3', '.flac'] and mime_type is not None and mime_type.startswith('audio/'):
-            return True
-
-        return False
-
     def get_music_files(self):
         """
-        Cette méthode retourne la liste des fichiers musicaux trouvés par l'instance de MusicFileExplorer.
-        Returns:
-            list: La liste des fichiers musicaux trouvés.
+        Fonction pour retourner la liste des fichiers musicaux trouvés par l'instance de MusicFileExplorer.
+
+        :return: La liste des fichiers musicaux trouvés.
         """
         return self.music_files
 
@@ -144,6 +147,7 @@ def main():
                 for key, value in metadata.items():
                     print(f"{key}: {value}")
                 print("\n")
+
 
 if __name__ == '__main__':
     main()
