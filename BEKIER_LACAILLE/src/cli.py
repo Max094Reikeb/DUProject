@@ -31,7 +31,7 @@ class Metadata:
             f"Durée: {self.duration}\n"
             f"Artiste de l'album : {self.albumartist}\n"
             f"Genre: {self.genre}\n"
-            f"Numéro de piste {self.track}/${self.track_total}\n"
+            f"Numéro de piste: {self.track}/${self.track_total}\n"
             f"Compositeur: {self.composer}\n"
         )
 
