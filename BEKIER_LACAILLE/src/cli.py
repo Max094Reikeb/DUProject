@@ -9,25 +9,30 @@ from tinytag import TinyTag
 
 
 class Metadata:
-    def __init__(self, title: str, artist: str, album: str, duration: float, genre: str, track_number: int,
-                 year: int, ):
+    def __init__(self, title: str, artist: str, album: str, year: int, duration: float, albumartist: str, genre: str,
+                 track: int, track_total: int, composer: str):
         self.title = title
         self.artist = artist
         self.album = album
-        self.duration = duration
-        self.genre = genre
-        self.track_number = track_number
         self.year = year
+        self.duration = duration
+        self.albumartist = albumartist
+        self.genre = genre
+        self.track = track
+        self.track_total = track_total
+        self.composer = composer
 
     def __str__(self):
         return (
-            f"title: {self.title}\n"
-            f"artist: {self.artist}\n"
-            f"album: {self.album}\n"
-            f"duration: {self.duration}\n"
-            f"genre: {self.genre}\n"
-            f"track_number: {self.track_number}\n"
-            f"year: {self.year}"
+            f"Titre: {self.title}\n"
+            f"Artiste: {self.artist}\n"
+            f"Album: {self.album}\n"
+            f"Année: {self.year}"
+            f"Durée: {self.duration}\n"
+            f"Artiste de l'album : {self.albumartist}\n"
+            f"Genre: {self.genre}\n"
+            f"Numéro de piste {self.track}/${self.track_total}\n"
+            f"Compositeur: {self.composer}\n"
         )
 
 
@@ -45,10 +50,13 @@ def extract_metadata(file_path: str) -> Union[None, Metadata]:
             title=tag.title,
             artist=tag.artist,
             album=tag.album,
-            duration=tag.duration,
-            genre=tag.genre,
-            track_number=tag.track,
             year=tag.year,
+            duration=tag.duration,
+            albumartist=tag.albumartist,
+            genre=tag.genre,
+            track=tag.track,
+            track_total=tag.track_total,
+            composer=tag.composer
         )
 
         return metadata
