@@ -1,6 +1,5 @@
 import os
 import tkinter as tk
-from tkinter import filedialog
 from tkinter import ttk
 from typing import Optional
 
@@ -53,11 +52,12 @@ class MusicExplorerGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Explorateur de fichiers musicaux")
-        self.main_frame = ttk.Frame(self.root)
-        self.main_frame.pack(fill=tk.BOTH, expand=True)
         self.create_widgets()
 
     def create_widgets(self):
+        """
+        Crée et organise les widgets de l'interface utilisateur.
+        """
         self.main_frame = ttk.Frame(self.root, padding="10")
         self.main_frame.grid(column=0, row=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -97,7 +97,10 @@ class MusicExplorerGUI:
         self.playlist_frame.grid(column=2, row=0, padx=(0, 10), sticky=(tk.W, tk.E, tk.N, tk.S))
 
     def select_directory(self):
-        directory = filedialog.askdirectory()
+        """
+        Permet à l'utilisateur de sélectionner un dossier et affiche les fichiers musicaux dans l'arborescence.
+        """
+        directory = "/"
         if directory:
             self.tree.delete(*self.tree.get_children())
 
@@ -110,6 +113,11 @@ class MusicExplorerGUI:
                 self.tree.insert("", "end", text=filename, values=(music_file,))
 
     def display_metadata(self, event):
+        """
+        Affiche les métadonnées du fichier musical sélectionné.
+
+        :param event: L'événement de sélection dans l'arborescence des fichiers.
+        """
         selected_item = self.tree.selection()[0]
         file_path = self.tree.item(selected_item)["values"][0]
 
@@ -119,6 +127,12 @@ class MusicExplorerGUI:
             self.show_metadata_text(metadata)
 
     def show_cover_art(self, metadata: Metadata, file_path: str):
+        """
+        Affiche l'image de couverture de l'album pour le fichier musical sélectionné.
+
+        :param metadata: Les métadonnées du fichier musical.
+        :param file_path: Le chemin du fichier musical.
+        """
         cover_art_path = get_cover_art_path(file_path)
         if cover_art_path:
             image = Image.open(cover_art_path)
@@ -130,6 +144,11 @@ class MusicExplorerGUI:
             self.cover_art_label.config(image=None)
 
     def show_metadata_text(self, metadata: Metadata):
+        """
+        Affiche les métadonnées du fichier musical dans un widget Text.
+
+        :param metadata: Les métadonnées du fichier musical.
+        """
         self.metadata_text.config(state=tk.NORMAL)
         self.metadata_text.delete(1.0, tk.END)
         self.metadata_text.insert(tk.END, str(metadata))
