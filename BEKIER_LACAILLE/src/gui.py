@@ -1,14 +1,17 @@
 import os
-import tkinter as tk
-from tkinter import ttk
 from typing import Optional
 
-from PIL import Image, ImageTk
+from kivy.app import App
+from kivy.properties import StringProperty
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.filechooser import FileChooserListView
+from kivy.uix.image import Image
+from kivy.uix.label import Label
 from mutagen.flac import FLAC
-from mutagen.id3 import ID3
 from mutagen.mp3 import MP3
 
-from cli import extract_metadata, Metadata, MusicFileExplorer
+from cli import extract_metadata
 
 
 def get_cover_art_path(file_path: str) -> Optional[str]:
@@ -21,7 +24,7 @@ def get_cover_art_path(file_path: str) -> Optional[str]:
     file_ext = os.path.splitext(file_path)[1].lower()
 
     if file_ext == ".mp3":
-        audio = MP3(file_path, ID3=ID3)
+        audio = MP3(file_path)
         if "APIC:" in audio:
             artwork = audio["APIC:"].data
 
@@ -48,118 +51,65 @@ def get_cover_art_path(file_path: str) -> Optional[str]:
         return None
 
 
-class MusicExplorerGUI:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Explorateur de fichiers musicaux")
-        self.create_widgets()
+class MusicExplorer(BoxLayout):
+    metadata_text = StringProperty("Sélectionnez un fichier...")
 
-    def create_widgets(self):
-        """
-        Crée et organise les widgets de l'interface utilisateur.
-        """
-        self.main_frame = ttk.Frame(self.root, padding="10")
-        self.main_frame.grid(column=0, row=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.orientation = 'horizontal'
 
-        self.tree_frame = ttk.LabelFrame(self.main_frame, text="Fichiers musicaux", padding="10")
-        self.tree_frame.grid(column=0, row=0, rowspan=2, padx=(0, 10), sticky=(tk.W, tk.E, tk.N, tk.S))
+        left_layout = BoxLayout(orientation='vertical', size_hint_x=0.3)
+        self.filechooser = FileChooserListView(filters=['*.mp3', '*.flac'], path='/', size_hint_y=0.9)
+        self.filechooser.bind(on_submit=self.display_metadata)
+        left_layout.add_widget(self.filechooser)
 
-        self.tree = ttk.Treeview(self.tree_frame, selectmode="browse")
-        self.tree.grid(column=0, row=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        # select_button = Button(text="Sélectionner un dossier", size_hint_y=0.1)
+        # select_button.bind(on_press=self.select_directory)
+        # left_layout.add_widget(select_button)
 
-        self.tree_scroll = ttk.Scrollbar(self.tree_frame, orient="vertical", command=self.tree.yview)
-        self.tree_scroll.grid(column=1, row=0, sticky=(tk.N, tk.S))
-        self.tree["yscrollcommand"] = self.tree_scroll.set
+        self.add_widget(left_layout)
 
-        self.tree["columns"] = ("path",)
-        self.tree.column("#0", width=200)
-        self.tree.column("path", width=0, stretch=tk.NO)
-        self.tree.heading("#0", text="Nom")
-        self.tree.heading("path", text="Chemin")
+        center_layout = BoxLayout(orientation='vertical', size_hint_x=0.7)
 
-        self.tree.bind("<<TreeviewSelect>>", self.display_metadata)
+        self.cover_art_image = Image(size_hint_y=0.5)
+        center_layout.add_widget(self.cover_art_image)
 
-        self.select_directory_button = ttk.Button(self.tree_frame, text="Sélectionner un dossier",
-                                                  command=self.select_directory)
-        self.select_directory_button.grid(column=0, row=1, pady=(10, 0), sticky=(tk.W, tk.E))
+        self.metadata_label = Label(text=self.metadata_text, halign='center', valign='top', size_hint_y=0.5)
+        self.metadata_label.bind(size=self.resize_label)
+        center_layout.add_widget(self.metadata_label)
 
-        self.metadata_frame = ttk.LabelFrame(self.main_frame, text="Métadonnées", padding="10")
-        self.metadata_frame.grid(column=1, row=0, padx=(0, 10), sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.add_widget(center_layout)
 
-        self.cover_art_label = ttk.Label(self.metadata_frame)
-        self.cover_art_label.grid(column=0, row=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+    def select_directory(self, instance):
+        directory = self.filechooser.path
+        # Ajouter des fonctionnalités supplémentaires pour gérer la sélection du répertoire
 
-        self.metadata_text = tk.Text(self.metadata_frame, wrap=tk.WORD, height=15, width=50)
-        self.metadata_text.grid(column=0, row=1, sticky=(tk.W, tk.E, tk.N, tk.S))
-        self.metadata_text.config(state=tk.DISABLED)
-
-        self.playlist_frame = ttk.LabelFrame(self.main_frame, text="Playlist", padding="10")
-        self.playlist_frame.grid(column=2, row=0, padx=(0, 10), sticky=(tk.W, tk.E, tk.N, tk.S))
-
-    def select_directory(self):
-        """
-        Permet à l'utilisateur de sélectionner un dossier et affiche les fichiers musicaux dans l'arborescence.
-        """
-        directory = "/"
-        if directory:
-            self.tree.delete(*self.tree.get_children())
-
-            music_explorer = MusicFileExplorer(directory)
-            music_explorer.explore_directory()
-            music_files = music_explorer.get_music_files()
-
-            for music_file in music_files:
-                filename = os.path.basename(music_file)
-                self.tree.insert("", "end", text=filename, values=(music_file,))
-
-    def display_metadata(self, event):
-        """
-        Affiche les métadonnées du fichier musical sélectionné.
-
-        :param event: L'événement de sélection dans l'arborescence des fichiers.
-        """
-        selected_item = self.tree.selection()[0]
-        file_path = self.tree.item(selected_item)["values"][0]
-
-        metadata = extract_metadata(file_path)
-        if metadata:
-            self.show_cover_art(metadata, file_path)
-            self.show_metadata_text(metadata)
-
-    def show_cover_art(self, metadata: Metadata, file_path: str):
-        """
-        Affiche l'image de couverture de l'album pour le fichier musical sélectionné.
-
-        :param metadata: Les métadonnées du fichier musical.
-        :param file_path: Le chemin du fichier musical.
-        """
-        cover_art_path = get_cover_art_path(file_path)
-        if cover_art_path:
-            image = Image.open(cover_art_path)
-            image.thumbnail((200, 200))
-            photo = ImageTk.PhotoImage(image)
-            self.cover_art_label.config(image=photo)
-            self.cover_art_label.image = photo
+    def display_metadata(self, instance, selection, touch):
+        if selection:
+            file_path = selection[0]
+            metadata = extract_metadata(file_path)
+            if metadata:
+                self.metadata_label.text = str(metadata)
+                cover_art_path = get_cover_art_path(file_path)
+                if cover_art_path:
+                    self.cover_art_image.source = cover_art_path
+                else:
+                    self.cover_art_image.source = ''
+            else:
+                self.metadata_label.text = "Métadonnées non disponibles pour ce fichier."
+                self.cover_art_image.source = ''
         else:
-            self.cover_art_label.config(image=None)
+            self.metadata_label.text = "Sélectionnez un fichier..."
+            self.cover_art_image.source = ''
 
-    def show_metadata_text(self, metadata: Metadata):
-        """
-        Affiche les métadonnées du fichier musical dans un widget Text.
-
-        :param metadata: Les métadonnées du fichier musical.
-        """
-        self.metadata_text.config(state=tk.NORMAL)
-        self.metadata_text.delete(1.0, tk.END)
-        self.metadata_text.insert(tk.END, str(metadata))
-        self.metadata_text.config(state=tk.DISABLED)
+    def resize_label(self, instance, value):
+        instance.text_size = (value[0], None)
 
 
-def main():
-    root = tk.Tk()
-    MusicExplorerGUI(root)
-    root.mainloop()
+class MusicExplorerApp(App):
+    def build(self):
+        return MusicExplorer()
 
 
 if __name__ == '__main__':
-    main()
+    MusicExplorerApp().run()

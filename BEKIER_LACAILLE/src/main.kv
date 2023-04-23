@@ -1,0 +1,27 @@
+BoxLayout:
+    orientation: 'vertical'
+    BoxLayout:
+        orientation: 'horizontal'
+        BoxLayout:
+            orientation: 'vertical'
+            FileChooserListView:
+                id: filechooser
+                filters: ['*.mp3', '*.flac']
+                on_selection: app.display_metadata(self.selection)
+            Button:
+                text: 'Sélectionner un dossier'
+                on_press: filechooser.path = filechooser.file_system.choose_dir()[0]
+        BoxLayout:
+            orientation: 'vertical'
+            AsyncImage:
+                id: cover_art
+                size_hint_y: 0.6
+            ScrollView:
+                Label:
+                    id: metadata_text
+                    text: ''
+                    text_size: self.width, None
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding: 10, 10
+                    valign: 'top'

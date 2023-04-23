@@ -27,7 +27,7 @@ class Metadata:
             f"Titre: {self.title}\n"
             f"Artiste: {self.artist}\n"
             f"Album: {self.album}\n"
-            f"Année: {self.year}"
+            f"Année: {self.year}\n"
             f"Durée: {self.duration}\n"
             f"Artiste de l'album : {self.albumartist}\n"
             f"Genre: {self.genre}\n"
