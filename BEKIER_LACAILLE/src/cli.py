@@ -1,6 +1,7 @@
 import argparse
 import mimetypes
 import os
+import xml.etree.ElementTree as ET
 from typing import Union, List
 from xml.dom import minidom
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -39,6 +40,7 @@ class Metadata:
 def extract_metadata(file_path: str) -> Union[None, Metadata]:
     """
     Fonction pour extraire les métadonnées d'un fichier MP3 ou FLAC.
+
     :param file_path: Chemin d'accès au fichier MP3 ou FLAC.
     :return: Une instance de la classe Metadata contenant les métadonnées si le fichier est valide, sinon None.
     """
@@ -69,6 +71,7 @@ def create_xspf_playlist(music_files: List[str], output_path: str):
     """
     Fonction pour créer une playlist XSPF à partir d'une liste de fichiers musicaux, et enregistrer la playlist
     dans un fichier spécifié.
+
     :param music_files: Liste de chemins de fichiers musicaux à inclure dans la playlist.
     :param output_path: Chemin d'accès du fichier où la playlist XSPF sera enregistrée.
     """
@@ -81,26 +84,29 @@ def create_xspf_playlist(music_files: List[str], output_path: str):
             track = SubElement(track_list, "track")
             SubElement(track, "location").text = music_file
             SubElement(track, "title").text = metadata.title
-            SubElement(track, "creator").text = metadata.artist
+            SubElement(track, "artist").text = metadata.artist
             SubElement(track, "album").text = metadata.album
+            SubElement(track, "year").text = str(metadata.year)
             SubElement(track, "duration").text = str(int(metadata.duration * 1000))
-            SubElement(track, "trackNum").text = str(metadata.track)
-            SubElement(track, "meta", rel="year").text = str(metadata.year)
-            SubElement(track, "meta", rel="genre").text = metadata.genre
+            SubElement(track, "albumartist").text = metadata.albumartist
+            SubElement(track, "genre").text = metadata.genre
+            SubElement(track, "track").text = str(metadata.track)
+            SubElement(track, "track_total").text = str(metadata.track_total)
+            SubElement(track, "composer").text = metadata.composer
 
     pretty_playlist = minidom.parseString(tostring(playlist, "utf-8")).toprettyxml(indent="  ")
 
     with open(output_path, "w", encoding="utf-8") as output_file:
         output_file.write(pretty_playlist)
 
+
 def read_xspf_playlist(file_path: str) -> List[str]:
     """
     Fonction pour lire les données d'un fichier XSPF.
+
     :param file_path: Chemin d'accès au fichier XSPF.
     :return: Une liste des éléments contenus dans le fichier playlist XSPF.
     """
-    import xml.etree.ElementTree as ET
-
     tree = ET.parse(file_path)
     root = tree.getroot()
     namespace = {'ns': 'http://xspf.org/ns/0/'}
@@ -113,9 +119,11 @@ def read_xspf_playlist(file_path: str) -> List[str]:
 
     return music_files
 
+
 def is_music_file(file_path):
     """
     Fonction pour vérifier si un fichier est de type musical en se basant sur son extension et son type MIME.
+
     :param file_path: Le chemin du fichier à vérifier.
     :return: True si le fichier est un fichier musical (.mp3 ou .flac), False sinon.
     """
@@ -138,6 +146,7 @@ class MusicFileExplorer:
         """
         Fonction pour explorer un répertoire et collecter les chemins des fichiers de musique (MP3 ou FLAC) qu'il contient.
         Cette fonction est récursive, c'est-à-dire qu'elle parcourt également tous les sous-répertoires du répertoire donné.
+
         :param directory: Le répertoire à explorer. Si None, utilise le répertoire racine de l'objet.
         """
         if directory is None:
@@ -152,6 +161,7 @@ class MusicFileExplorer:
     def get_music_files(self):
         """
         Fonction pour retourner la liste des fichiers musicaux trouvés par l'instance de MusicFileExplorer.
+
         :return: La liste des fichiers musicaux trouvés.
         """
         return self.music_files
