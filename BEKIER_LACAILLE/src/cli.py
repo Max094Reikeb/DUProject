@@ -67,57 +67,97 @@ def extract_metadata(file_path: str) -> Union[None, Metadata]:
         return None
 
 
-def create_xspf_playlist(music_files: List[str], output_path: str):
-    """
-    Fonction pour créer une playlist XSPF à partir d'une liste de fichiers musicaux, et enregistrer la playlist
-    dans un fichier spécifié.
+class Playlist:
+    def __init__(self, path: str):
+        self.path = path
+        self.music_files = self.read_xspf_playlist()
 
-    :param music_files: Liste de chemins de fichiers musicaux à inclure dans la playlist.
-    :param output_path: Chemin d'accès du fichier où la playlist XSPF sera enregistrée.
-    """
-    playlist = Element("playlist", version="1", xmlns="http://xspf.org/ns/0/")
-    track_list = SubElement(playlist, "trackList")
+    def create_xspf_playlist(self, music_files: List[str]):
+        """
+        Fonction pour créer une playlist XSPF à partir d'une liste de fichiers musicaux, et enregistrer la playlist
+        dans un fichier spécifié.
 
-    for music_file in music_files:
-        metadata = extract_metadata(music_file)
-        if metadata:
-            track = SubElement(track_list, "track")
-            SubElement(track, "location").text = music_file
-            SubElement(track, "title").text = metadata.title
-            SubElement(track, "artist").text = metadata.artist
-            SubElement(track, "album").text = metadata.album
-            SubElement(track, "year").text = str(metadata.year)
-            SubElement(track, "duration").text = str(int(metadata.duration * 1000))
-            SubElement(track, "albumartist").text = metadata.albumartist
-            SubElement(track, "genre").text = metadata.genre
-            SubElement(track, "track").text = str(metadata.track)
-            SubElement(track, "track_total").text = str(metadata.track_total)
-            SubElement(track, "composer").text = metadata.composer
+        :param music_files: Liste de chemins de fichiers musicaux à inclure dans la playlist.
+        """
+        playlist = Element("playlist", version="1", xmlns="http://xspf.org/ns/0/")
+        track_list = SubElement(playlist, "trackList")
 
-    pretty_playlist = minidom.parseString(tostring(playlist, "utf-8")).toprettyxml(indent="  ")
+        for music_file in music_files:
+            metadata = extract_metadata(music_file)
+            if metadata:
+                track = SubElement(track_list, "track")
+                SubElement(track, "location").text = music_file
+                SubElement(track, "title").text = metadata.title
+                SubElement(track, "artist").text = metadata.artist
+                SubElement(track, "album").text = metadata.album
+                SubElement(track, "year").text = str(metadata.year)
+                SubElement(track, "duration").text = str(int(metadata.duration * 1000))
+                SubElement(track, "albumartist").text = metadata.albumartist
+                SubElement(track, "genre").text = metadata.genre
+                SubElement(track, "track").text = str(metadata.track)
+                SubElement(track, "track_total").text = str(metadata.track_total)
+                SubElement(track, "composer").text = metadata.composer
 
-    with open(output_path, "w", encoding="utf-8") as output_file:
-        output_file.write(pretty_playlist)
+        pretty_playlist = minidom.parseString(tostring(playlist, "utf-8")).toprettyxml(indent="  ")
 
+        with open(self.path, "w", encoding="utf-8") as output_file:
+            output_file.write(pretty_playlist)
 
-def read_xspf_playlist(file_path: str) -> List[str]:
-    """
-    Fonction pour lire les données d'un fichier XSPF.
+    def read_xspf_playlist(self) -> List[str]:
+        """
+        Fonction pour lire les données d'un fichier XSPF.
 
-    :param file_path: Chemin d'accès au fichier XSPF.
-    :return: Une liste des éléments contenus dans le fichier playlist XSPF.
-    """
-    tree = ET.parse(file_path)
-    root = tree.getroot()
-    namespace = {'ns': 'http://xspf.org/ns/0/'}
-    music_files = []
+        :return: Une liste des éléments contenus dans le fichier playlist XSPF.
+        """
+        tree = ET.parse(self.path)
+        root = tree.getroot()
+        namespace = {'ns': 'http://xspf.org/ns/0/'}
+        music_files = []
 
-    for track in root.findall('ns:trackList/ns:track', namespace):
-        location = track.find('ns:location', namespace)
-        if location is not None:
-            music_files.append(location.text)
+        for track in root.findall('ns:trackList/ns:track', namespace):
+            location = track.find('ns:location', namespace)
+            if location is not None:
+                music_files.append(location.text)
 
-    return music_files
+        return music_files
+
+    @staticmethod
+    def get_playlists(directory: str) -> List[str]:
+        """
+        Récupère la liste des playlists dans le répertoire donné.
+
+        :param directory: Le chemin du répertoire contenant les playlists.
+        :return: Une liste des chemins de fichiers des playlists.
+        """
+        return [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.xspf')]
+
+    def display_playlist_tracks(self) -> None:
+        """
+        Affiche les morceaux contenus dans la playlist.
+        """
+        for track in self.music_files:
+            print(track)
+
+    @classmethod
+    def create_playlist(cls, path: str) -> 'Playlist':
+        """
+        Crée une nouvelle playlist et retourne une instance de Playlist.
+
+        :param path: Le chemin du fichier de la nouvelle playlist.
+        :return: Une instance de Playlist.
+        """
+        with open(path, "w", encoding="utf-8") as output_file:
+            output_file.write('')
+
+        return cls(path)
+
+    def save_new_playlist(self, music_files: List[str]) -> None:
+        """
+        Enregistre une nouvelle playlist avec la liste de fichiers musicaux donnée.
+
+        :param music_files: Liste de chemins de fichiers musicaux à inclure dans la playlist.
+        """
+        self.create_xspf_playlist(music_files)
 
 
 def is_music_file(file_path):
@@ -183,7 +223,8 @@ def main():
             filtered_music_files = music_explorer.get_music_files()
 
             if args.output is not None:
-                create_xspf_playlist(filtered_music_files, args.output)
+                playlist_manager = Playlist(args.output)
+                playlist_manager.create_xspf_playlist(filtered_music_files)
 
             for music_file in filtered_music_files:
                 print(f"Fichier: {music_file}")

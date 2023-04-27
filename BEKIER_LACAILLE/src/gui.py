@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, List
 
 from kivy.app import App
 from kivy.properties import StringProperty
@@ -11,7 +11,9 @@ from kivy.uix.label import Label
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 
-from cli import extract_metadata
+from cli import extract_metadata, Playlist
+
+PLAYLISTS_DIR = 'playlists'
 
 
 def get_cover_art_path(file_path: str) -> Optional[str]:
@@ -58,18 +60,14 @@ class MusicExplorer(BoxLayout):
         super().__init__(**kwargs)
         self.orientation = 'horizontal'
 
-        left_layout = BoxLayout(orientation='vertical', size_hint_x=0.3)
+        left_layout = BoxLayout(orientation='vertical', size_hint_x=0.25)
         self.filechooser = FileChooserListView(filters=['*.mp3', '*.flac'], path='/', size_hint_y=0.9)
         self.filechooser.bind(on_submit=self.display_metadata)
         left_layout.add_widget(self.filechooser)
 
-        # select_button = Button(text="Sélectionner un dossier", size_hint_y=0.1)
-        # select_button.bind(on_press=self.select_directory)
-        # left_layout.add_widget(select_button)
-
         self.add_widget(left_layout)
 
-        center_layout = BoxLayout(orientation='vertical', size_hint_x=0.7)
+        center_layout = BoxLayout(orientation='vertical', size_hint_x=0.75)
 
         self.cover_art_image = Image(size_hint_y=0.5)
         center_layout.add_widget(self.cover_art_image)
@@ -79,6 +77,17 @@ class MusicExplorer(BoxLayout):
         center_layout.add_widget(self.metadata_label)
 
         self.add_widget(center_layout)
+
+        right_layout = BoxLayout(orientation='vertical', size_hint_x=0.25)
+        self.playlist_list = ListView(item_strings=self.get_playlist_names(), size_hint_y=0.9)
+        self.playlist_list.adapter.bind(on_selection_change=self.display_playlist_tracks)
+        right_layout.add_widget(self.playlist_list)
+
+        new_playlist_button = Button(text="Nouvelle playlist", size_hint_y=0.1)
+        new_playlist_button.bind(on_press=self.create_new_playlist)
+        right_layout.add_widget(new_playlist_button)
+
+        self.add_widget(right_layout)
 
     def select_directory(self, instance):
         directory = self.filechooser.path
@@ -102,8 +111,28 @@ class MusicExplorer(BoxLayout):
             self.metadata_label.text = "Sélectionnez un fichier..."
             self.cover_art_image.source = ''
 
+    @staticmethod
     def resize_label(self, instance, value):
         instance.text_size = (value[0], None)
+
+    @staticmethod
+    def get_playlist_names(self) -> List[str]:
+        playlist_files = Playlist.get_playlists(PLAYLISTS_DIR)
+        return [os.path.splitext(os.path.basename(f))[0] for f in playlist_files]
+
+    def display_playlist_tracks(self, *args):
+        selected_playlist = self.playlist_list.adapter.selection[0].text
+        playlist_path = os.path.join(PLAYLISTS_DIR, f"{selected_playlist}.xspf")
+        playlist = Playlist(playlist_path)
+        playlist.display_playlist_tracks()
+
+    def create_new_playlist(self, instance):
+        new_playlist_name = "Nouvelle playlist"
+        new_playlist_path = os.path.join(PLAYLISTS_DIR, f"{new_playlist_name}.xspf")
+        new_playlist = Playlist.create_playlist(new_playlist_path)
+        self.playlist_list.item_strings.append(new_playlist_name)
+        self.playlist_list.adapter.data.extend([new_playlist_name])
+        self.playlist_list.adapter.reload_view_attrs(self.playlist_list, 0)
 
 
 class MusicExplorerApp(App):
