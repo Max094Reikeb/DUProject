@@ -8,6 +8,7 @@ from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.image import Image
 from kivy.uix.label import Label
+from kivy.uix.recycleview import RecycleView
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 
@@ -53,6 +54,13 @@ def get_cover_art_path(file_path: str) -> Optional[str]:
         return None
 
 
+class PlaylistsView(RecycleView):
+    def __init__(self, playlists, **kwargs):
+        super(PlaylistsView, self).__init__(**kwargs)
+        self.viewclass = 'Label'
+        self.data = [{'text': playlist} for playlist in playlists]
+
+
 class MusicExplorer(BoxLayout):
     metadata_text = StringProperty("Sélectionnez un fichier...")
 
@@ -79,7 +87,7 @@ class MusicExplorer(BoxLayout):
         self.add_widget(center_layout)
 
         right_layout = BoxLayout(orientation='vertical', size_hint_x=0.25)
-        self.playlist_list = ListView(item_strings=self.get_playlist_names(), size_hint_y=0.9)
+        self.playlist_list = PlaylistsView(playlists=self.get_playlist_names(self), size_hint_y=0.9)
         self.playlist_list.adapter.bind(on_selection_change=self.display_playlist_tracks)
         right_layout.add_widget(self.playlist_list)
 
