@@ -129,6 +129,8 @@ class Playlist:
         :param directory: Le chemin du répertoire contenant les playlists.
         :return: Une liste des chemins de fichiers des playlists.
         """
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         return [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.xspf')]
 
     def display_playlist_tracks(self) -> None:

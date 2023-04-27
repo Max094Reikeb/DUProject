@@ -2,13 +2,14 @@ import os
 from typing import Optional, List
 
 from kivy.app import App
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.recycleview import RecycleView
+from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 
@@ -54,6 +55,23 @@ def get_cover_art_path(file_path: str) -> Optional[str]:
         return None
 
 
+class SelectableLabel(RecycleDataViewBehavior, Label):
+    index = None
+    selected = BooleanProperty(False)
+    selectable = BooleanProperty(True)
+
+    def on_touch_down(self, touch):
+        if super(SelectableLabel, self).on_touch_down(touch):
+            return True
+        if self.collide_point(*touch.pos) and self.selectable:
+            return self.parent.select_with_touch(self.index, touch)
+
+    def apply_selection(self, rv, index, is_selected):
+        self.selected = is_selected
+        if is_selected:
+            rv.parent.parent.parent.display_playlist_tracks(rv.data[index]['text'])
+
+
 class PlaylistsView(RecycleView):
     def __init__(self, playlists, **kwargs):
         super(PlaylistsView, self).__init__(**kwargs)
@@ -88,7 +106,6 @@ class MusicExplorer(BoxLayout):
 
         right_layout = BoxLayout(orientation='vertical', size_hint_x=0.25)
         self.playlist_list = PlaylistsView(playlists=self.get_playlist_names(self), size_hint_y=0.9)
-        self.playlist_list.adapter.bind(on_selection_change=self.display_playlist_tracks)
         right_layout.add_widget(self.playlist_list)
 
         new_playlist_button = Button(text="Nouvelle playlist", size_hint_y=0.1)
@@ -119,7 +136,6 @@ class MusicExplorer(BoxLayout):
             self.metadata_label.text = "Sélectionnez un fichier..."
             self.cover_art_image.source = ''
 
-    @staticmethod
     def resize_label(self, instance, value):
         instance.text_size = (value[0], None)
 
