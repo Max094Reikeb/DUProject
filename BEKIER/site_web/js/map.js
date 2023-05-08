@@ -13,10 +13,12 @@ function updateDepartements(region) {
     });
 }
 
+// Fonction permettant de gérer la sélection des régions en détectant les clics sur la carte.
 document.querySelectorAll('area').forEach(area => {
     area.addEventListener('click', (e) => {
         e.preventDefault();
         const region = e.target.dataset.region;
+        // Mets à jour les départements dans la liste déroulante correspondante.
         updateDepartements(region);
     });
 });

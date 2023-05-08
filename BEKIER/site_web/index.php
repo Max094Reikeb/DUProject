@@ -23,6 +23,9 @@
                 <option value="">Sélectionnez une ville</option>
             </select>
         </div>
+        <input type="hidden" name="ville" id="hidden-ville" value="">
+        <input type="hidden" name="latitude" id="latitude">
+        <input type="hidden" name="longitude" id="longitude">
         <input type="submit" value="Voir la météo" disabled>
     </form>
 </div>
