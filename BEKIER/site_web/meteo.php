@@ -1,17 +1,16 @@
 <?php
-$apiKey = "1c4adc203d26c4d319d106e37bd94148";
+$apiKey = "b28fc63e0d3ce4e475038908516e8013";
 $ville = $_POST['ville'];
-$lat = $_POST['latitude'];
-$lon = $_POST['longitude'];
+$codePostal = $_POST['codePostal'];
 
 // Appel de l'API OpenWeatherMap pour obtenir les données météo
-$url = "https://api.openweathermap.org/data/2.5/onecall?lat={$lat}&lon={$lon}&exclude=minutely,hourly,alerts&units=metric&appid={$apiKey}";
+$url = "http://api.openweathermap.org/data/2.5/forecast?zip={$codePostal},FR&units=metric&appid={$apiKey}&lang=fr";
 $response = file_get_contents($url);
 $data = json_decode($response);
 
 // Extraire les informations météo nécessaires
-$currentWeather = $data->current;
-$dailyWeather = $data->daily;
+$currentWeather = $data->list[0];
+$dailyWeather = array_slice($data->list, 1, 7); // On prend les 7 prochains jours de prévision
 
 // Sauvegarder la dernière ville consultée dans un cookie
 setcookie('derniere_ville', $ville, time() + (86400 * 30), '/');
@@ -26,10 +25,8 @@ setcookie('derniere_ville', $ville, time() + (86400 * 30), '/');
 </head>
 <body>
 <h1>Météo de <?php echo $ville; ?></h1>
-<p>Température actuelle : <?php echo $currentWeather->temp; ?>°C</p>
+<p>Température actuelle : <?php echo $currentWeather->main->temp; ?>°C</p>
 <p>Description : <?php echo $currentWeather->weather[0]->description; ?></p>
-<p>Lever du soleil : <?php echo date('H:i', $currentWeather->sunrise); ?></p>
-<p>Coucher du soleil : <?php echo date('H:i', $currentWeather->sunset); ?></p>
 
 <h2>Prévisions pour les 7 prochains jours</h2>
 <table>
@@ -44,7 +41,7 @@ setcookie('derniere_ville', $ville, time() + (86400 * 30), '/');
     <?php foreach ($dailyWeather as $day): ?>
         <tr>
             <td><?php echo date('d/m/Y', $day->dt); ?></td>
-            <td><?php echo $day->temp->day; ?>°C</td>
+            <td><?php echo $day->main->temp; ?>°C</td>
             <td><?php echo $day->weather[0]->description; ?></td>
         </tr>
     <?php endforeach; ?>
