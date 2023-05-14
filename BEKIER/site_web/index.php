@@ -25,6 +25,8 @@
         </div>
         <input type="hidden" id="ville" name="ville" value="">
         <input type="hidden" id="codePostal" name="codePostal">
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
         <input type="submit" value="Voir la météo" disabled>
     </form>
 </div>
