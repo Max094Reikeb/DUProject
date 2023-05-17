@@ -70,8 +70,6 @@ def extract_metadata(file_path: str) -> Union[None, Metadata]:
 class Playlist:
     def __init__(self, path: str):
         self.path = path
-        if not os.path.exists(path):
-            self.create_xspf_playlist([])
         self.music_files = self.read_xspf_playlist()
 
     def create_xspf_playlist(self, music_files: List[str]):
@@ -162,19 +160,6 @@ class Playlist:
         :param music_files: Liste de chemins de fichiers musicaux à inclure dans la playlist.
         """
         self.create_xspf_playlist(music_files)
-
-    def add_to_playlist(self, instance):
-        file_path = self.filechooser.selection[0]
-
-        if self.playlist_list.layout_manager.selected_nodes:
-            selected_index = self.playlist_list.layout_manager.selected_nodes[0]
-            selected_playlist = self.playlist_list.data[selected_index]['text']
-
-            playlist_path = os.path.join(PLAYLISTS_DIR, f"{selected_playlist}.xspf")
-
-            Playlist.add_to_playlist(playlist_path, file_path)
-        else:
-            print("Aucune playlist sélectionnée.")
 
 def is_music_file(file_path):
     """
