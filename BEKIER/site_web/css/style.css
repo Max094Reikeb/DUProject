@@ -56,7 +56,7 @@ input[type="submit"] {
     color: #212121;
     font-size: 1.2em;
     font-weight: bold;
-    margin: 20px 0px;
+    margin: 20px 0;
 }
 
 .infos {
@@ -91,6 +91,25 @@ input[type="submit"] {
 table {
     width: 100%;
     text-align: center;
+}
+
+button.switch-btn {
+    display: block;
+    text-align: center;
+    margin: 20px auto;
+    padding: 15px 30px;
+    background-color: #333;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    border: 2px solid #007BFF;
+    font-size: 1.3rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+button.switch-btn:hover {
+    background-color: #555;
+    border-color: #0056b3;
 }
 
 .back-btn {
