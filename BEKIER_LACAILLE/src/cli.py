@@ -69,6 +69,32 @@ def extract_metadata(file_path: str) -> Union[None, Metadata]:
         return None
 
 
+def get_playlists(directory: str) -> List[str]:
+    """
+    Récupère la liste des playlists dans le répertoire donné.
+
+    :param directory: Le chemin du répertoire contenant les playlists.
+    :return: Une liste des chemins de fichiers des playlists.
+    """
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.xspf')]
+
+
+def create_playlist(cls, path: str) -> 'Playlist':
+    """
+    Crée une nouvelle playlist et retourne une instance de Playlist.
+
+    :param cls: Fonction qui crée la playlist à partir du chemin
+    :param path: Le chemin du fichier de la nouvelle playlist.
+    :return: Une instance de Playlist.
+    """
+    with open(path, "w", encoding="utf-8") as output_file:
+        output_file.write('')
+
+    return cls(path)
+
+
 class Playlist:
     def __init__(self, path: str):
         self.path = path
@@ -125,37 +151,12 @@ class Playlist:
 
         return music_files
 
-    @staticmethod
-    def get_playlists(directory: str) -> List[str]:
-        """
-        Récupère la liste des playlists dans le répertoire donné.
-
-        :param directory: Le chemin du répertoire contenant les playlists.
-        :return: Une liste des chemins de fichiers des playlists.
-        """
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        return [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.xspf')]
-
     def display_playlist_tracks(self) -> None:
         """
         Affiche les morceaux contenus dans la playlist.
         """
         for track in self.music_files:
             print(track)
-
-    @classmethod
-    def create_playlist(cls, path: str) -> 'Playlist':
-        """
-        Crée une nouvelle playlist et retourne une instance de Playlist.
-
-        :param path: Le chemin du fichier de la nouvelle playlist.
-        :return: Une instance de Playlist.
-        """
-        with open(path, "w", encoding="utf-8") as output_file:
-            output_file.write('')
-
-        return cls(path)
 
     def save_new_playlist(self, music_files: List[str]) -> None:
         """

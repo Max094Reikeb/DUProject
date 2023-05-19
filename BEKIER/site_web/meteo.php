@@ -87,7 +87,7 @@ setcookie('duree_prevision', $duration, time() + (86400 * 30), '/');
             <?php endforeach; ?>
             </tbody>
         </table>
-        <form action="" method="post" class="duration-form">
+        <form method="post" class="duration-form">
             <input type="hidden" name="ville" value="<?php echo $ville; ?>">
             <input type="hidden" name="codePostal" value="<?php echo $codePostal; ?>">
             <input type="hidden" name="latitude" value="<?php echo $lat; ?>">
