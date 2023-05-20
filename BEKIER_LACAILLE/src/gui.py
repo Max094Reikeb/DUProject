@@ -13,7 +13,7 @@ from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 
-from cli import extract_metadata, Playlist, PLAYLISTS_DIR
+from cli import extract_metadata, Playlist, PLAYLISTS_DIR, get_playlists, create_playlist
 
 
 def get_cover_art_path(file_path: str) -> Optional[str]:
@@ -76,6 +76,10 @@ class PlaylistsView(RecycleView):
         self.data = [{'text': playlist} for playlist in playlists]
 
 
+def resize_label(instance, value):
+    instance.text_size = (value[0], None)
+
+
 class MusicExplorer(BoxLayout):
     metadata_text = StringProperty("Sélectionnez un fichier...")
 
@@ -90,49 +94,46 @@ class MusicExplorer(BoxLayout):
 
         self.add_widget(left_layout)
 
-        self.center_layout = BoxLayout(orientation='vertical', size_hint_x=0.75)  # Ajoutez self. ici
+        self.center_layout = BoxLayout(orientation='vertical', size_hint_x=0.75)
 
         self.cover_art_image = Image(size_hint_y=0.5)
         self.center_layout.add_widget(self.cover_art_image)
 
         self.metadata_label = Label(text=self.metadata_text, halign='center', valign='top', size_hint_y=0.5)
-        self.metadata_label.bind(size=self.resize_label)
+        self.metadata_label.bind(size=resize_label)
         self.center_layout.add_widget(self.metadata_label)
 
         self.add_widget(self.center_layout)
 
         right_layout = BoxLayout(orientation='vertical', size_hint_x=0.25)
-        filechooser = FileChooserListView(filters=['*.xpsf'], path=PLAYLISTS_DIR)
+        filechooser = FileChooserListView(filters=['*.xspf'], path=PLAYLISTS_DIR, size_hint_y=0.9)
         filechooser.bind(on_submit=self.load_playlist)
         right_layout.add_widget(filechooser)
 
+        new_playlist_button = Button(text="Nouvelle playlist", size_hint_y=0.1)
+        new_playlist_button.bind(on_press=self.create_new_playlist)
+        right_layout.add_widget(new_playlist_button)
+
+        add_to_playlist_button = Button(text="Ajouter à la playlist", size_hint_y=0.1)
+        add_to_playlist_button.bind(on_press=self.add_to_playlist)
+        right_layout.add_widget(add_to_playlist_button)
+
         self.add_widget(right_layout)
 
-        #self.playlist_list = PlaylistsView(playlists=self.get_playlist_names(), size_hint_y=0.9)
-        #right_layout.add_widget(self.playlist_list)
+        self.playlist_layout = BoxLayout(orientation='vertical', size_hint_x=0.75)
 
-        #new_playlist_button = Button(text="Nouvelle playlist", size_hint_y=0.1)
-        #new_playlist_button.bind(on_press=self.create_new_playlist)
-        #right_layout.add_widget(new_playlist_button)
+        self.playlist_list = PlaylistsView(playlists=self.get_playlist_names(), size_hint_y=0.9)
+        self.playlist_layout.add_widget(self.playlist_list)
 
-        #add_to_playlist_button = Button(text="Ajouter à la playlist", size_hint_y=0.1)
-        #add_to_playlist_button.bind(on_press=self.add_to_playlist)
-        #right_layout.add_widget(add_to_playlist_button)
-
-        #close_playlist_button = Button(text="Fermer la playlist", size_hint_y=0.1)
-        #close_playlist_button.bind(on_press=self.close_playlist)
-        #right_layout.add_widget(close_playlist_button)
-
-        #self.add_widget(right_layout)
+        self.add_widget(self.playlist_layout)
 
     def select_directory(self, instance):
         directory = self.filechooser.path
 
-    def show_playlist_tracks(self, instance, selection, touch):
-        if selection:
-            file_path = selection[0]
-            playlist = Playlist(file_path)
-            playlist.display_playlist_tracks()
+    @staticmethod
+    def get_playlist_names() -> List[str]:
+        playlist_files = get_playlists(PLAYLISTS_DIR)
+        return [os.path.splitext(os.path.basename(f))[0] for f in playlist_files]
 
     def display_metadata(self, instance, selection, touch):
         if selection:
@@ -152,61 +153,34 @@ class MusicExplorer(BoxLayout):
             self.metadata_label.text = "Sélectionnez un fichier..."
             self.cover_art_image.source = ''
 
-    def resize_label(self, instance, value):
-        instance.text_size = (value[0], None)
-
-    def get_playlist_names(self) -> List[str]:
-        playlist_files = Playlist.get_playlists(PLAYLISTS_DIR)
-        return [os.path.splitext(os.path.basename(f))[0] for f in playlist_files]
-
-    def display_playlist_tracks(self, *args):
-        selected_playlist = self.playlist_list.adapter.selection[0].text
-        playlist_path = os.path.join(PLAYLISTS_DIR, f"{selected_playlist}.xpsf")
-        playlist = Playlist(playlist_path)
-        playlist.display_playlist_tracks()
+    def load_playlist(self, instance, selection, touch):
+        if selection:
+            playlist_path = selection[0]
+            playlist = Playlist(playlist_path)
+            if playlist:
+                self.playlist_list = playlist.read_xspf_playlist()
+            else:
+                self.playlist_list = "Erreur lors du chargement de la playlist."
+        else:
+            self.playlist_list = "Aucune playlist sélectionnée..."
 
     def create_new_playlist(self, instance):
         new_playlist_name = "Nouvelle playlist"
-        new_playlist_path = os.path.join(PLAYLISTS_DIR, f"{new_playlist_name}.xpsf")
-        new_playlist = Playlist.create_playlist(new_playlist_path)
+        new_playlist_path = os.path.join(PLAYLISTS_DIR, f"{new_playlist_name}.xspf")
+        create_playlist(Playlist, new_playlist_path)
         self.playlist_list.item_strings.append(new_playlist_name)
         self.playlist_list.adapter.data.extend([new_playlist_name])
         self.playlist_list.adapter.reload_view_attrs(self.playlist_list, 0)
 
     def add_to_playlist(self, instance):
         file_path = self.filechooser.selection[0]
-
         selected_playlist = self.playlist_list.selected_item
 
         if selected_playlist:
-            playlist_path = os.path.join(PLAYLISTS_DIR, f"{selected_playlist}.xpsf")
-
-            Playlist.add_to_playlist(playlist_path, file_path)
+            playlist_path = os.path.join(PLAYLISTS_DIR, f"{selected_playlist}.xspf")
+            Playlist(playlist_path).add_track_to_playlist(file_path)
         else:
             print("Aucune playlist sélectionnée.")
-
-    def open_filechooser(self, instance):
-        filechooser = FileChooserListView(filters=['*.xpsf'], path=PLAYLISTS_DIR)
-        filechooser.bind(on_submit=self.load_playlist)
-        self.add_widget(filechooser)
-
-    def load_playlist(self, instance, selection, touch):
-        if selection:
-            playlist_path = selection[0]
-            playlist = Playlist(playlist_path)
-            playlist_tracks = playlist.read_xspf_playlist()
-            self.display_playlist_tracks(playlist_tracks)
-
-    def display_playlist_tracks(self, tracks):
-        self.center_layout.clear_widgets()
-        for track in tracks:
-            track_label = Label(text=track)
-            self.center_layout.add_widget(track_label)
-
-    def close_playlist(self, instance):
-        self.center_layout.clear_widgets()
-        self.center_layout.add_widget(self.cover_art_image)
-        self.center_layout.add_widget(self.metadata_label)
 
 
 class MusicExplorerApp(App):
