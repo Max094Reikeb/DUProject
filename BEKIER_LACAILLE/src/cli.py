@@ -81,20 +81,6 @@ def get_playlists(directory: str) -> List[str]:
     return [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.xspf')]
 
 
-def create_playlist(cls, path: str) -> 'Playlist':
-    """
-    Crée une nouvelle playlist et retourne une instance de Playlist.
-
-    :param cls: Fonction qui crée la playlist à partir du chemin
-    :param path: Le chemin du fichier de la nouvelle playlist.
-    :return: Une instance de Playlist.
-    """
-    with open(path, "w", encoding="utf-8") as output_file:
-        output_file.write('')
-
-    return cls(path)
-
-
 class Playlist:
     def __init__(self, path: str):
         self.path = path

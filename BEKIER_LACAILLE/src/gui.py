@@ -1,4 +1,5 @@
 import os
+import xml.etree.ElementTree as ET
 from typing import Optional, List
 
 from kivy.app import App
@@ -13,7 +14,7 @@ from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 
-from cli import extract_metadata, Playlist, PLAYLISTS_DIR, get_playlists, create_playlist
+from cli import extract_metadata, Playlist, PLAYLISTS_DIR, get_playlists
 
 
 def get_cover_art_path(file_path: str) -> Optional[str]:
@@ -53,6 +54,10 @@ def get_cover_art_path(file_path: str) -> Optional[str]:
         return None
 
 
+def resize_label(instance, value):
+    instance.text_size = (value[0], None)
+
+
 class SelectableLabel(RecycleDataViewBehavior, Label):
     index = None
     selected = BooleanProperty(False)
@@ -76,8 +81,10 @@ class PlaylistsView(RecycleView):
         self.data = [{'text': playlist} for playlist in playlists]
 
 
-def resize_label(instance, value):
-    instance.text_size = (value[0], None)
+class TracksView(RecycleView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.viewclass = 'SelectableLabel'
 
 
 class MusicExplorer(BoxLayout):
@@ -106,9 +113,12 @@ class MusicExplorer(BoxLayout):
         self.add_widget(self.center_layout)
 
         right_layout = BoxLayout(orientation='vertical', size_hint_x=0.25)
-        filechooser = FileChooserListView(filters=['*.xspf'], path=PLAYLISTS_DIR, size_hint_y=0.9)
-        filechooser.bind(on_submit=self.load_playlist)
-        right_layout.add_widget(filechooser)
+        self.playlist_filechooser = FileChooserListView(filters=['*.xspf'], path=PLAYLISTS_DIR, size_hint_y=0.9)
+        self.playlist_filechooser.bind(on_submit=self.load_playlist)
+        right_layout.add_widget(self.playlist_filechooser)
+
+        self.playlist_tracks = TracksView(size_hint_y=0.9)
+        right_layout.add_widget(self.playlist_tracks)
 
         new_playlist_button = Button(text="Nouvelle playlist", size_hint_y=0.1)
         new_playlist_button.bind(on_press=self.create_new_playlist)
@@ -158,26 +168,29 @@ class MusicExplorer(BoxLayout):
             playlist_path = selection[0]
             playlist = Playlist(playlist_path)
             if playlist:
-                self.playlist_list = playlist.read_xspf_playlist()
+                self.playlist_tracks.data = [{'text': track} for track in playlist.read_xspf_playlist()]
             else:
-                self.playlist_list = "Erreur lors du chargement de la playlist."
+                self.playlist_tracks.data = [{'text': "Erreur lors du chargement de la playlist."}]
         else:
-            self.playlist_list = "Aucune playlist sélectionnée..."
+            self.playlist_tracks.data = [{'text': "Aucune playlist sélectionnée..."}]
 
     def create_new_playlist(self, instance):
         new_playlist_name = "Nouvelle playlist"
         new_playlist_path = os.path.join(PLAYLISTS_DIR, f"{new_playlist_name}.xspf")
-        create_playlist(Playlist, new_playlist_path)
-        self.playlist_list.item_strings.append(new_playlist_name)
-        self.playlist_list.adapter.data.extend([new_playlist_name])
-        self.playlist_list.adapter.reload_view_attrs(self.playlist_list, 0)
+
+        root = ET.Element("playlist")
+        ET.SubElement(root, "trackList")
+        tree = ET.ElementTree(root)
+        tree.write(new_playlist_path, encoding='utf-8', xml_declaration=True)
+
+        self.playlist_list.data.append({'text': new_playlist_name})
+        self.playlist_list.refresh_from_data()
 
     def add_to_playlist(self, instance):
         file_path = self.filechooser.selection[0]
-        selected_playlist = self.playlist_list.selected_item
+        playlist_path = self.playlist_filechooser.selection[0]
 
-        if selected_playlist:
-            playlist_path = os.path.join(PLAYLISTS_DIR, f"{selected_playlist}.xspf")
+        if playlist_path:
             Playlist(playlist_path).add_track_to_playlist(file_path)
         else:
             print("Aucune playlist sélectionnée.")
