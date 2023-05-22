@@ -137,9 +137,6 @@ class MusicExplorer(BoxLayout):
 
         self.add_widget(self.playlist_layout)
 
-    def select_directory(self, instance):
-        directory = self.filechooser.path
-
     @staticmethod
     def get_playlist_names() -> List[str]:
         playlist_files = get_playlists(PLAYLISTS_DIR)
