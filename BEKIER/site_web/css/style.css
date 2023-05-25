@@ -22,6 +22,10 @@ h1 {
     margin-bottom: 20px;
 }
 
+h4 {
+    text-align: center;
+}
+
 .container {
     max-width: 80%;
     display: flex;

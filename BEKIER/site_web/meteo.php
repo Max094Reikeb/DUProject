@@ -19,8 +19,8 @@ $currentWeather = $data->current;
 $forecast = $duration == '4_hours' ? array_slice($data->hourly, 1, 4) : array_slice($data->daily, 1, 4);
 
 // On sauvegarde dans les cookies la ville, et les prévisions
-setcookie('derniere_ville', $ville, time() + (86400 * 30), '/');
-setcookie('duree_prevision', $duration, time() + (86400 * 30), '/');
+setcookie('lastCity', $ville . " (" . $codePostal . ")", time() + (86400 * 30), '/');
+setcookie('showPrevision', $duration, time() + (86400 * 30), '/');
 ?>
 
 <!DOCTYPE html>
@@ -34,6 +34,11 @@ setcookie('duree_prevision', $duration, time() + (86400 * 30), '/');
 </head>
 <body>
 <h1>Météo de <?php echo $ville; ?></h1>
+<?php
+if(isset($_COOKIE['lastCity'])) {
+    echo '<h4>Dernière ville consultée: ' . $_COOKIE['lastCity'] . '</h4>';
+}
+?>
 <div class="container">
     <div class="weather-info">
         <h2>

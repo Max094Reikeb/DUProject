@@ -28,7 +28,7 @@
         <input type="hidden" id="latitude" name="latitude">
         <input type="hidden" id="longitude" name="longitude">
         <input type="hidden" id="duration" name="duration"
-               value="<?php echo isset($_COOKIE['duree_prevision']) ? $_COOKIE['duree_prevision'] : '4_days'; ?>">
+               value="<?php echo isset($_COOKIE['showPrevision']) ? $_COOKIE['showPrevision'] : '4_days'; ?>">
         <input type="submit" value="Voir la météo" disabled>
     </form>
 </div>
