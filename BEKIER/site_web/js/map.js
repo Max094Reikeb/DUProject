@@ -6,7 +6,7 @@ function updateDepartements(region) {
         let options = '<option value="">Sélectionnez un département</option>';
 
         data.forEach(function (departement) {
-            options += `<option value="${departement.code}">${departement.nom}</option>`;
+            options += `<option value="${departement.code}">${departement.nom} (${departement.code})</option>`;
         });
 
         $('#select-department select').html(options).prop('disabled', false);

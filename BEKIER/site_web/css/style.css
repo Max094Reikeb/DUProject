@@ -96,10 +96,10 @@ table {
 button.switch-btn {
     display: block;
     text-align: center;
-    margin: 20px auto;
-    padding: 15px 30px;
-    background-color: #333;
-    color: #fff;
+    margin: 0 auto;
+    padding: 10px 20px;
+    color: black;
+    background-color: #f4f4f4;
     text-decoration: none;
     border-radius: 5px;
     border: 2px solid #007BFF;
@@ -108,8 +108,9 @@ button.switch-btn {
 }
 
 button.switch-btn:hover {
-    background-color: #555;
+    background-color: #007BFF;
     border-color: #0056b3;
+    color: white;
 }
 
 .back-btn {

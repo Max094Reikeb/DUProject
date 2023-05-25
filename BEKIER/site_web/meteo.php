@@ -48,6 +48,7 @@ setcookie('duree_prevision', $duration, time() + (86400 * 30), '/');
                  class="weather-icon" alt=""/> <span class="temp"><?php echo $currentWeather->temp; ?>°C</span>
         </div>
         <div class="infos">
+            <div>Ressentie: <?php echo $currentWeather->feels_like; ?>°C</div>
             <div>Soleil: <?php
                 $sunRise = new DateTime("@{$currentWeather->sunrise}");
                 $sunSet = new DateTime("@{$currentWeather->sunset}");
@@ -58,6 +59,7 @@ setcookie('duree_prevision', $duration, time() + (86400 * 30), '/');
             </div>
             <div>Humidité: <?php echo $currentWeather->humidity; ?> %</div>
             <div>Vent: <?php echo $currentWeather->wind_speed; ?> km/h</div>
+            <div>Indice UV: <?php echo $currentWeather->uvi; ?></div>
         </div>
     </div>
     <div class="forecast">
