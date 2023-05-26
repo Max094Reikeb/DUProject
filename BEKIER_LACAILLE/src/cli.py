@@ -85,37 +85,17 @@ class Playlist:
     def __init__(self, path: str):
         self.path = path
         if not os.path.exists(path):
-            self.create_xspf_playlist([])
+            self.create_playlist()
         self.music_files = self.read_xspf_playlist()
 
-    def create_xspf_playlist(self, music_files: List[str]):
+    def create_playlist(self):
         """
-        Fonction pour créer une playlist XSPF à partir d'une liste de fichiers musicaux, et enregistrer la playlist
-        dans un fichier spécifié.
-
-        :param music_files: Liste de chemins de fichiers musicaux à inclure dans la playlist.
+        Fonction pour créer une playlist XSPF vide, et l'enregistrer dans un fichier spécifié.
         """
         playlist = Element("playlist", version="1", xmlns="http://xspf.org/ns/0/")
         track_list = SubElement(playlist, "trackList")
 
-        for music_file in music_files:
-            metadata = extract_metadata(music_file)
-            if metadata:
-                track = SubElement(track_list, "track")
-                SubElement(track, "location").text = music_file
-                SubElement(track, "title").text = metadata.title
-                SubElement(track, "artist").text = metadata.artist
-                SubElement(track, "album").text = metadata.album
-                SubElement(track, "year").text = str(metadata.year)
-                SubElement(track, "duration").text = str(int(metadata.duration * 1000))
-                SubElement(track, "albumartist").text = metadata.albumartist
-                SubElement(track, "genre").text = metadata.genre
-                SubElement(track, "track").text = str(metadata.track)
-                SubElement(track, "track_total").text = str(metadata.track_total)
-                SubElement(track, "composer").text = metadata.composer
-
         pretty_playlist = minidom.parseString(tostring(playlist, "utf-8")).toprettyxml(indent="  ")
-
         with open(self.path, "w", encoding="utf-8") as output_file:
             output_file.write(pretty_playlist)
 
@@ -144,27 +124,14 @@ class Playlist:
         for track in self.music_files:
             print(track)
 
-    def save_new_playlist(self, music_files: List[str]) -> None:
+    def add_tracks_to_playlist(self, music_files: List[str]):
         """
-        Enregistre une nouvelle playlist avec la liste de fichiers musicaux donnée.
+        Ajoute une liste de morceaux à la playlist.
 
         :param music_files: Liste de chemins de fichiers musicaux à inclure dans la playlist.
         """
-        self.create_xspf_playlist(music_files)
-
-    def add_track_to_playlist(self, music_file: str):
-        """
-        Ajoute un morceau à la playlist.
-
-        :param music_file: Chemin du fichier de musique à ajouter à la playlist.
-        """
-        if not is_music_file(music_file):
-            print(f"Le fichier {music_file} n'est pas un fichier de musique valide.")
-            return
-
-        metadata = extract_metadata(music_file)
-        if not metadata:
-            print(f"Impossible d'extraire les métadonnées du fichier {music_file}.")
+        if not all(is_music_file(music_file) for music_file in music_files):
+            print(f"Certains fichiers de la liste ne sont pas des fichiers de musique valides.")
             return
 
         tree = ET.parse(self.path)
@@ -176,18 +143,24 @@ class Playlist:
             print(f"Erreur : La playlist {self.path} ne contient pas de balise 'trackList'.")
             return
 
-        track = SubElement(track_list_element, "track")
-        SubElement(track, "location").text = music_file
-        SubElement(track, "title").text = metadata.title
-        SubElement(track, "artist").text = metadata.artist
-        SubElement(track, "album").text = metadata.album
-        SubElement(track, "year").text = str(metadata.year)
-        SubElement(track, "duration").text = str(int(metadata.duration * 1000))
-        SubElement(track, "albumartist").text = metadata.albumartist
-        SubElement(track, "genre").text = metadata.genre
-        SubElement(track, "track").text = str(metadata.track)
-        SubElement(track, "track_total").text = str(metadata.track_total)
-        SubElement(track, "composer").text = metadata.composer
+        for music_file in music_files:
+            metadata = extract_metadata(music_file)
+            if not metadata:
+                print(f"Impossible d'extraire les métadonnées du fichier {music_file}.")
+                continue
+
+            track = SubElement(track_list_element, "track")
+            SubElement(track, "location").text = music_file
+            SubElement(track, "title").text = metadata.title
+            SubElement(track, "artist").text = metadata.artist
+            SubElement(track, "album").text = metadata.album
+            SubElement(track, "year").text = str(metadata.year)
+            SubElement(track, "duration").text = str(int(metadata.duration * 1000))
+            SubElement(track, "albumartist").text = metadata.albumartist
+            SubElement(track, "genre").text = metadata.genre
+            SubElement(track, "track").text = str(metadata.track)
+            SubElement(track, "track_total").text = str(metadata.track_total)
+            SubElement(track, "composer").text = metadata.composer
 
         pretty_playlist = minidom.parseString(tostring(root, "utf-8")).toprettyxml(indent="  ")
 
@@ -259,7 +232,7 @@ def main():
 
             if args.output is not None:
                 playlist_manager = Playlist(args.output)
-                playlist_manager.create_xspf_playlist(filtered_music_files)
+                playlist_manager.add_tracks_to_playlist(filtered_music_files)
 
             for music_file in filtered_music_files:
                 print(f"Fichier: {music_file}")

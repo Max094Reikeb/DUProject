@@ -1,5 +1,4 @@
 import os
-import xml.etree.ElementTree as ET
 from typing import Optional, List
 
 from kivy.app import App
@@ -175,10 +174,7 @@ class MusicExplorer(BoxLayout):
         new_playlist_name = "Nouvelle playlist"
         new_playlist_path = os.path.join(PLAYLISTS_DIR, f"{new_playlist_name}.xspf")
 
-        root = ET.Element("playlist")
-        ET.SubElement(root, "trackList")
-        tree = ET.ElementTree(root)
-        tree.write(new_playlist_path, encoding='utf-8', xml_declaration=True)
+        Playlist(new_playlist_path).create_playlist()
 
         self.playlist_list.data.append({'text': new_playlist_name})
         self.playlist_list.refresh_from_data()
@@ -188,7 +184,7 @@ class MusicExplorer(BoxLayout):
         playlist_path = self.playlist_filechooser.selection[0]
 
         if playlist_path:
-            Playlist(playlist_path).add_track_to_playlist(file_path)
+            Playlist(playlist_path).add_tracks_to_playlist(file_path)
         else:
             print("Aucune playlist sélectionnée.")
 
