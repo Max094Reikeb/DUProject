@@ -142,6 +142,13 @@ class MusicExplorer(BoxLayout):
         return [os.path.splitext(os.path.basename(f))[0] for f in playlist_files]
 
     def display_metadata(self, instance, selection, touch):
+        """
+        Permet d'afficher les métadonnées du morceau sélectionné.
+
+        :param instance: Instance du GUI.
+        :param selection: Morceau sélectionné dans le FileChooser.
+        :param touch: Réaction à la sélection. (clic de la souris)
+        """
         if selection:
             file_path = selection[0]
             metadata = extract_metadata(file_path)
@@ -160,6 +167,13 @@ class MusicExplorer(BoxLayout):
             self.cover_art_image.source = ''
 
     def load_playlist(self, instance, selection, touch):
+        """
+        Permet de charger la playlist sélectionnée.
+
+        :param instance: Instance du GUI.
+        :param selection: Playlist sélectionnée dans le FileChooser.
+        :param touch: Réaction à la sélection. (clic de la souris)
+        """
         if selection:
             playlist_path = selection[0]
             playlist = Playlist(playlist_path)
@@ -171,6 +185,11 @@ class MusicExplorer(BoxLayout):
             self.playlist_tracks.data = [{'text': "Aucune playlist sélectionnée..."}]
 
     def create_new_playlist(self, instance):
+        """
+        Permet de créer une nouvelle playlist.
+
+        :param instance: Instance du GUI.
+        """
         new_playlist_name = "Nouvelle playlist"
         new_playlist_path = os.path.join(PLAYLISTS_DIR, f"{new_playlist_name}.xspf")
 
@@ -180,6 +199,11 @@ class MusicExplorer(BoxLayout):
         self.playlist_list.refresh_from_data()
 
     def add_to_playlist(self, instance):
+        """
+        Permet d'ajouter le morceau sélectionné à la playlist sélectionnée.
+
+        :param instance: Instance du GUI.
+        """
         file_path = self.filechooser.selection[0]
         playlist_path = self.playlist_filechooser.selection[0]
 

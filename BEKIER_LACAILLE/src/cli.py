@@ -90,7 +90,7 @@ class Playlist:
 
     def create_playlist(self):
         """
-        Fonction pour créer une playlist XSPF vide, et l'enregistrer dans un fichier spécifié.
+        Fonction pour créer une playlist XSPF vide et l'enregistrer dans un fichier spécifié.
         """
         playlist = Element("playlist", version="1", xmlns="http://xspf.org/ns/0/")
         track_list = SubElement(playlist, "trackList")
