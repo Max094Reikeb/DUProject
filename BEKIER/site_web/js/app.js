@@ -48,3 +48,21 @@ $(document).ready(function () {
         }
     });
 });
+
+// Gestion du mode sombre
+// On vérifie si le mode sombre est enregistré
+if (localStorage.getItem('dark-mode') === 'true') {
+    document.body.classList.add('dark-mode');
+    $('.meteo-btn').addClass('dark-mode');
+    $('.switch-btn').addClass('dark-mode');
+}
+
+// On change le mode avec le switch
+document.getElementById('theme-switcher').addEventListener('click', function() {
+    document.body.classList.toggle('dark-mode');
+    $('.meteo-btn').toggleClass('dark-mode');
+    $('.switch-btn').toggleClass('dark-mode');
+
+    // On enregistre dans le local storage
+    localStorage.setItem('dark-mode', document.body.classList.contains('dark-mode').toString());
+});
