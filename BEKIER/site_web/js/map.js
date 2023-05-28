@@ -18,7 +18,7 @@ document.querySelectorAll('area').forEach(area => {
     area.addEventListener('click', (e) => {
         e.preventDefault();
         const region = e.target.dataset.region;
-        // Mets à jour les départements dans la liste déroulante correspondante.
+        // Met à jour les départements dans la liste déroulante correspondante.
         updateDepartements(region);
     });
 });

@@ -1,4 +1,4 @@
-/* Styles généraux pour le site */
+/* Style général */
 html, body {
     height: 100%;
 }
@@ -205,7 +205,7 @@ button.switch-btn:hover {
     height: 50%;
 }
 
-/* Styles pour le mode sombre */
+/* Style pour le mode sombre */
 body.dark-mode {
     background-color: #333;
     color: #fff;
