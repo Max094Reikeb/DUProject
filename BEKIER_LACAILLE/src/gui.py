@@ -141,6 +141,10 @@ class MusicExplorer(BoxLayout):
         remove_from_playlist_button.bind(on_press=self.remove_from_playlist)
         right_layout.add_widget(remove_from_playlist_button)
 
+        delete_playlist_button = Button(text="Supprimer la playlist", size_hint_y=0.1)
+        delete_playlist_button.bind(on_press=self.delete_playlist)
+        right_layout.add_widget(delete_playlist_button)
+
         self.add_widget(right_layout)
 
         self.playlist_layout = BoxLayout(orientation='vertical', size_hint_x=0.75)
@@ -211,10 +215,22 @@ class MusicExplorer(BoxLayout):
         new_playlist_name = "Nouvelle playlist"
         new_playlist_path = os.path.join(PLAYLISTS_DIR, f"{new_playlist_name}.xspf")
 
-        Playlist(new_playlist_path).create_playlist()
+        Playlist(new_playlist_path)
 
         self.playlist_list.data.append({'text': new_playlist_name})
         self.playlist_list.refresh_from_data()
+
+    def delete_playlist(self, instance):
+        """
+        Permet de supprimer une playlist.
+
+        :param instance: Instance de GUI.
+        """
+        playlist_path = self.playlist_filechooser.selection[0]
+        if playlist_path:
+            Playlist(playlist_path).delete()
+        else:
+            print("Aucune playlist sélectionnée.")
 
     def add_to_playlist(self, instance):
         """
@@ -237,7 +253,7 @@ class MusicExplorer(BoxLayout):
         :param instance: Instance du GUI.
         """
         if self.playlist_tracks.selected_item:
-            self.current_playlist.remove_track(self.playlist_tracks.selected_item)
+            self.current_playlist.remove_track([self.playlist_tracks.selected_item])
             self.load_playlist(None, self.playlist_filechooser.selection, None)
 
 

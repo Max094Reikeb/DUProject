@@ -85,11 +85,11 @@ class Playlist:
     def __init__(self, path: str):
         self.path = path
         if not os.path.exists(path):
-            self.create_playlist()
+            self.create()
         self.music_files = self.read()
         self.tree = ET.parse(path)
 
-    def create_playlist(self):
+    def create(self):
         """
         Fonction pour créer une playlist XSPF vide et l'enregistrer dans un fichier spécifié.
         """
@@ -99,6 +99,15 @@ class Playlist:
         pretty_playlist = minidom.parseString(tostring(playlist, "utf-8")).toprettyxml(indent="  ")
         with open(self.path, "w", encoding="utf-8") as output_file:
             output_file.write(pretty_playlist)
+
+    def delete(self):
+        """
+        Fonction pour supprimer la playlist.
+        """
+        if os.path.exists(self.path):
+            os.remove(self.path)
+        else:
+            print(f"Erreur : Le fichier {self.path} n'existe pas.")
 
     def read(self) -> List[str]:
         """
@@ -134,11 +143,11 @@ class Playlist:
         for track in self.music_files:
             print(track)
 
-    def remove_track(self, track_to_remove: str):
+    def remove_track(self, tracks_to_remove: List[str]):
         """
-        Supprime un morceau de la playlist.
+        Supprime une liste de morceaux de la playlist.
 
-        :param track_to_remove: Morceau à supprimer.
+        :param tracks_to_remove: Listes de morceaux à supprimer.
         """
         root = self.tree.getroot()
         namespace = {'ns': 'http://xspf.org/ns/0/'}
@@ -150,9 +159,10 @@ class Playlist:
 
         for track in track_list_element.findall('ns:track', namespace):
             location = track.find('ns:location', namespace)
-            if location is not None and location.text == track_to_remove:
-                track_list_element.remove(track)
-                break
+            for track_to_remove in tracks_to_remove:
+                if location is not None and location.text == track_to_remove:
+                    track_list_element.remove(track)
+                    break
 
         self.write()
 
