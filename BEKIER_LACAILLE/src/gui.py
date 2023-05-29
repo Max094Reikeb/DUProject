@@ -8,8 +8,10 @@ from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.image import Image
 from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
+from kivy.uix.textinput import TextInput
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 
@@ -98,6 +100,40 @@ class TracksView(RecycleView):
         self.viewclass = 'SelectableTrackLabel'
 
 
+class NewPlaylistPopup(Popup):
+    def __init__(self, create_callback, **kwargs):
+        super().__init__(**kwargs)
+        self.title = 'Nouvelle Playlist'
+        self.size_hint = (0.7, 0.4)
+        self.size = (400, 200)  # test
+        self.auto_dismiss = False
+
+        content_layout = BoxLayout(orientation='vertical', padding=[10, 10, 10, 10], spacing=10)
+
+        self.text_input = TextInput(hint_text="Entrez le nom de la playlist", multiline=False, size_hint_y=None,
+                                    height=70)
+        content_layout.add_widget(self.text_input)
+
+        button_layout = BoxLayout(size_hint_y=None, height=50, spacing=10)
+
+        cancel_button = Button(text='Annuler', size_hint_x=None, width=150)
+        cancel_button.bind(on_release=self.dismiss)
+        button_layout.add_widget(cancel_button)
+
+        confirm_button = Button(text='Confirmer', size_hint_x=None, width=150)
+        confirm_button.bind(on_release=self.confirm)
+        button_layout.add_widget(confirm_button)
+
+        content_layout.add_widget(button_layout)
+
+        self.create_callback = create_callback
+        self.content = content_layout
+
+    def confirm(self, instance):
+        self.create_callback(self.text_input.text)
+        self.dismiss()
+
+
 class MusicExplorer(BoxLayout):
     metadata_text = StringProperty("Sélectionnez un fichier...")
 
@@ -162,6 +198,14 @@ class MusicExplorer(BoxLayout):
         playlist_files = get_playlists(PLAYLISTS_DIR)
         return [os.path.splitext(os.path.basename(f))[0] for f in playlist_files]
 
+    def refresh_playlist_file_chooser(self):
+        """
+        Permet de rafraichir l'explorateur de playlists.
+        """
+        original_path = self.playlist_filechooser.path
+        self.playlist_filechooser.path = os.path.dirname(original_path)
+        self.playlist_filechooser.path = original_path
+
     def display_metadata(self, instance, selection, touch):
         """
         Permet d'afficher les métadonnées du morceau sélectionné.
@@ -212,13 +256,25 @@ class MusicExplorer(BoxLayout):
 
         :param instance: Instance du GUI.
         """
-        new_playlist_name = "Nouvelle playlist"
-        new_playlist_path = os.path.join(PLAYLISTS_DIR, f"{new_playlist_name}.xspf")
+        popup = NewPlaylistPopup(self.create_playlist_callback)
+        popup.open()
 
-        Playlist(new_playlist_path)
+    def create_playlist_callback(self, playlist_name):
+        """
+        Fonction recevant le nom de la nouvelle playlist.
 
-        self.playlist_list.data.append({'text': new_playlist_name})
-        self.playlist_list.refresh_from_data()
+        :param playlist_name: Nom de la nouvelle playlist.
+        """
+        if playlist_name:
+            new_playlist_path = os.path.join(PLAYLISTS_DIR, f"{playlist_name}.xspf")
+
+            Playlist(new_playlist_path)
+
+            self.playlist_list.data.append({'text': playlist_name})
+            self.playlist_list.refresh_from_data()
+            self.refresh_playlist_file_chooser()
+        else:
+            print("Le nom de la playlist est vide !")
 
     def delete_playlist(self, instance):
         """
@@ -229,6 +285,7 @@ class MusicExplorer(BoxLayout):
         playlist_path = self.playlist_filechooser.selection[0]
         if playlist_path:
             Playlist(playlist_path).delete()
+            self.refresh_playlist_file_chooser()
         else:
             print("Aucune playlist sélectionnée.")
 
