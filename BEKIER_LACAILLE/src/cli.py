@@ -12,14 +12,14 @@ PLAYLISTS_DIR = 'playlists'
 
 
 class Metadata:
-    def __init__(self, title: str, artist: str, album: str, year: int, duration: float, albumartist: str, genre: str,
+    def __init__(self, title: str, artist: str, album: str, year: int, duration: float, album_artist: str, genre: str,
                  track: int, track_total: int, composer: str):
         self.title = title
         self.artist = artist
         self.album = album
         self.year = year
         self.duration = duration
-        self.albumartist = albumartist
+        self.album_artist = album_artist
         self.genre = genre
         self.track = track
         self.track_total = track_total
@@ -32,7 +32,7 @@ class Metadata:
             f"Album: {self.album}\n"
             f"Année: {self.year}\n"
             f"Durée: {self.duration}\n"
-            f"Artiste de l'album : {self.albumartist}\n"
+            f"Artiste de l'album : {self.album_artist}\n"
             f"Genre: {self.genre}\n"
             f"Numéro de piste: {self.track}/${self.track_total}\n"
             f"Compositeur: {self.composer}\n"
@@ -55,7 +55,7 @@ def extract_metadata(file_path: str) -> Union[None, Metadata]:
             album=tag.album,
             year=tag.year,
             duration=tag.duration,
-            albumartist=tag.albumartist,
+            album_artist=tag.album_artist,
             genre=tag.genre,
             track=tag.track,
             track_total=tag.track_total,
@@ -187,7 +187,7 @@ class Playlist:
             SubElement(track, "album").text = metadata.album
             SubElement(track, "year").text = str(metadata.year)
             SubElement(track, "duration").text = str(int(metadata.duration * 1000))
-            SubElement(track, "albumartist").text = metadata.albumartist
+            SubElement(track, "album_artist").text = metadata.album_artist
             SubElement(track, "genre").text = metadata.genre
             SubElement(track, "track").text = str(metadata.track)
             SubElement(track, "track_total").text = str(metadata.track_total)
