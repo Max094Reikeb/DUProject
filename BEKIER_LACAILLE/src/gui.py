@@ -65,7 +65,7 @@ class SelectableLabel(RecycleDataViewBehavior, Label):
     def apply_selection(self, rv, index, is_selected):
         self.selected = is_selected
         if is_selected:
-            rv.parent.parent.parent.display_playlist_tracks(rv.data[index]['text'])
+            rv.parent.parent.parent.display_tracks(rv.data[index]['text'])
             rv.selected_item = rv.data[index]['text']
         else:
             rv.selected_item = None
@@ -80,10 +80,22 @@ class PlaylistsView(RecycleView):
         self.data = [{'text': playlist} for playlist in playlists]
 
 
+class SelectableTrackLabel(SelectableLabel):
+    def apply_selection(self, rv, index, is_selected):
+        self.selected = is_selected
+        if is_selected:
+            rv.parent.parent.parent.display_metadata(None, [rv.data[index]['text']], None)
+            rv.selected_item = rv.data[index]['text']
+        else:
+            rv.selected_item = None
+
+
 class TracksView(RecycleView):
+    selected_item = StringProperty(None, allownone=True)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.viewclass = 'SelectableLabel'
+        self.viewclass = 'SelectableTrackLabel'
 
 
 class MusicExplorer(BoxLayout):
@@ -92,6 +104,7 @@ class MusicExplorer(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'horizontal'
+        self.current_playlist = None
 
         left_layout = BoxLayout(orientation='vertical', size_hint_x=0.25)
         self.filechooser = FileChooserListView(filters=['*.mp3', '*.flac'], path='/', size_hint_y=0.9)
@@ -116,9 +129,6 @@ class MusicExplorer(BoxLayout):
         self.playlist_filechooser.bind(on_submit=self.load_playlist)
         right_layout.add_widget(self.playlist_filechooser)
 
-        self.playlist_tracks = TracksView(size_hint_y=0.9)
-        right_layout.add_widget(self.playlist_tracks)
-
         new_playlist_button = Button(text="Nouvelle playlist", size_hint_y=0.1)
         new_playlist_button.bind(on_press=self.create_new_playlist)
         right_layout.add_widget(new_playlist_button)
@@ -127,12 +137,19 @@ class MusicExplorer(BoxLayout):
         add_to_playlist_button.bind(on_press=self.add_to_playlist)
         right_layout.add_widget(add_to_playlist_button)
 
+        remove_from_playlist_button = Button(text="Supprimer de la playlist", size_hint_y=0.1)
+        remove_from_playlist_button.bind(on_press=self.remove_from_playlist)
+        right_layout.add_widget(remove_from_playlist_button)
+
         self.add_widget(right_layout)
 
         self.playlist_layout = BoxLayout(orientation='vertical', size_hint_x=0.75)
 
-        self.playlist_list = PlaylistsView(playlists=self.get_playlist_names(), size_hint_y=0.9)
+        self.playlist_list = PlaylistsView(playlists=self.get_playlist_names(), size_hint_y=0.5)
         self.playlist_layout.add_widget(self.playlist_list)
+
+        self.playlist_tracks = TracksView(size_hint_y=0.5)
+        self.playlist_layout.add_widget(self.playlist_tracks)
 
         self.add_widget(self.playlist_layout)
 
@@ -178,7 +195,8 @@ class MusicExplorer(BoxLayout):
             playlist_path = selection[0]
             playlist = Playlist(playlist_path)
             if playlist:
-                self.playlist_tracks.data = [{'text': track} for track in playlist.read_xspf_playlist()]
+                self.current_playlist = playlist
+                self.playlist_tracks.data = [{'text': track} for track in playlist.read()]
             else:
                 self.playlist_tracks.data = [{'text': "Erreur lors du chargement de la playlist."}]
         else:
@@ -208,9 +226,19 @@ class MusicExplorer(BoxLayout):
         playlist_path = self.playlist_filechooser.selection[0]
 
         if playlist_path:
-            Playlist(playlist_path).add_tracks_to_playlist(file_path)
+            Playlist(playlist_path).add_tracks([file_path])
         else:
             print("Aucune playlist sélectionnée.")
+
+    def remove_from_playlist(self, instance):
+        """
+        Permet de retirer le morceau sélectionné de la playlist sélectionnaée.
+
+        :param instance: Instance du GUI.
+        """
+        if self.playlist_tracks.selected_item:
+            self.current_playlist.remove_track(self.playlist_tracks.selected_item)
+            self.load_playlist(None, self.playlist_filechooser.selection, None)
 
 
 class MusicExplorerApp(App):

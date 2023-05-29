@@ -86,7 +86,8 @@ class Playlist:
         self.path = path
         if not os.path.exists(path):
             self.create_playlist()
-        self.music_files = self.read_xspf_playlist()
+        self.music_files = self.read()
+        self.tree = ET.parse(path)
 
     def create_playlist(self):
         """
@@ -99,7 +100,7 @@ class Playlist:
         with open(self.path, "w", encoding="utf-8") as output_file:
             output_file.write(pretty_playlist)
 
-    def read_xspf_playlist(self) -> List[str]:
+    def read(self) -> List[str]:
         """
         Fonction pour lire les données d'un fichier XSPF.
 
@@ -117,14 +118,45 @@ class Playlist:
 
         return music_files
 
-    def display_playlist_tracks(self) -> None:
+    def write(self):
+        """
+        Ré-écris la playlist avec les bons morceaux.
+        """
+        pretty_playlist = minidom.parseString(tostring(self.tree.getroot(), "utf-8")).toprettyxml(indent="  ")
+
+        with open(self.path, "w", encoding="utf-8") as output_file:
+            output_file.write(pretty_playlist)
+
+    def display_tracks(self) -> None:
         """
         Affiche les morceaux contenus dans la playlist.
         """
         for track in self.music_files:
             print(track)
 
-    def add_tracks_to_playlist(self, music_files: List[str]):
+    def remove_track(self, track_to_remove: str):
+        """
+        Supprime un morceau de la playlist.
+
+        :param track_to_remove: Morceau à supprimer.
+        """
+        root = self.tree.getroot()
+        namespace = {'ns': 'http://xspf.org/ns/0/'}
+
+        track_list_element = root.find('ns:trackList', namespace)
+        if track_list_element is None:
+            print(f"Erreur : La playlist {self.file_path} ne contient pas de balise 'trackList'.")
+            return
+
+        for track in track_list_element.findall('ns:track', namespace):
+            location = track.find('ns:location', namespace)
+            if location is not None and location.text == track_to_remove:
+                track_list_element.remove(track)
+                break
+
+        self.write()
+
+    def add_tracks(self, music_files: List[str]):
         """
         Ajoute une liste de morceaux à la playlist.
 
@@ -134,8 +166,7 @@ class Playlist:
             print(f"Certains fichiers de la liste ne sont pas des fichiers de musique valides.")
             return
 
-        tree = ET.parse(self.path)
-        root = tree.getroot()
+        root = self.tree.getroot()
         namespace = {'ns': 'http://xspf.org/ns/0/'}
 
         track_list_element = root.find('ns:trackList', namespace)
@@ -162,10 +193,7 @@ class Playlist:
             SubElement(track, "track_total").text = str(metadata.track_total)
             SubElement(track, "composer").text = metadata.composer
 
-        pretty_playlist = minidom.parseString(tostring(root, "utf-8")).toprettyxml(indent="  ")
-
-        with open(self.path, "w", encoding="utf-8") as output_file:
-            output_file.write(pretty_playlist)
+        self.write()
 
 
 def is_music_file(file_path):
@@ -232,7 +260,7 @@ def main():
 
             if args.output is not None:
                 playlist_manager = Playlist(args.output)
-                playlist_manager.add_tracks_to_playlist(filtered_music_files)
+                playlist_manager.add_tracks(filtered_music_files)
 
             for music_file in filtered_music_files:
                 print(f"Fichier: {music_file}")
