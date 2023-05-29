@@ -161,7 +161,7 @@ class MusicExplorer(BoxLayout):
         self.add_widget(self.center_layout)
 
         right_layout = BoxLayout(orientation='vertical', size_hint_x=0.25)
-        self.playlist_filechooser = FileChooserListView(filters=['*.xspf'], path=PLAYLISTS_DIR, size_hint_y=0.9)
+        self.playlist_filechooser = FileChooserListView(filters=['*.xspf'], path=PLAYLISTS_DIR, size_hint_y=0.8)
         self.playlist_filechooser.bind(on_submit=self.load_playlist)
         right_layout.add_widget(self.playlist_filechooser)
 
@@ -239,16 +239,24 @@ class MusicExplorer(BoxLayout):
         :param selection: Playlist sélectionnée dans le FileChooser.
         :param touch: Réaction à la sélection. (clic de la souris)
         """
+        print("load_playlist called with selection:", selection)
         if selection:
             playlist_path = selection[0]
-            playlist = Playlist(playlist_path)
-            if playlist:
-                self.current_playlist = playlist
-                self.playlist_tracks.data = [{'text': track} for track in playlist.read()]
-            else:
-                self.playlist_tracks.data = [{'text': "Erreur lors du chargement de la playlist."}]
+            self.current_playlist = Playlist(playlist_path)
+
+            tracks = self.current_playlist.music_files
+            self.playlist_tracks.data = [{'text': track} for track in tracks]
+            self.ids['playlist_tracks'].data = [{'text': track.title} for track in tracks]
+            self.playlist_tracks.refresh_from_data()
         else:
             self.playlist_tracks.data = [{'text': "Aucune playlist sélectionnée..."}]
+            self.playlist_tracks.refresh_from_data()
+
+    def display_track_metadata(self, index):
+        track = self.ids['playlist_tracks'].data[index]
+        metadata = extract_metadata(track)
+        if metadata:
+            self.metadata_text = metadata.__str__()
 
     def create_new_playlist(self, instance):
         """

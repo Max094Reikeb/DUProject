@@ -12,14 +12,14 @@ PLAYLISTS_DIR = 'playlists'
 
 
 class Metadata:
-    def __init__(self, title: str, artist: str, album: str, year: int, duration: float, album_artist: str, genre: str,
+    def __init__(self, title: str, artist: str, album: str, year: int, duration: float, albumartist: str, genre: str,
                  track: int, track_total: int, composer: str):
         self.title = title
         self.artist = artist
         self.album = album
         self.year = year
         self.duration = duration
-        self.album_artist = album_artist
+        self.albumartist = albumartist
         self.genre = genre
         self.track = track
         self.track_total = track_total
@@ -32,7 +32,7 @@ class Metadata:
             f"Album: {self.album}\n"
             f"Année: {self.year}\n"
             f"Durée: {self.duration}\n"
-            f"Artiste de l'album : {self.album_artist}\n"
+            f"Artiste de l'album : {self.albumartist}\n"
             f"Genre: {self.genre}\n"
             f"Numéro de piste: {self.track}/${self.track_total}\n"
             f"Compositeur: {self.composer}\n"
@@ -55,7 +55,7 @@ def extract_metadata(file_path: str) -> Union[None, Metadata]:
             album=tag.album,
             year=tag.year,
             duration=tag.duration,
-            album_artist=tag.album_artist,
+            albumartist=tag.albumartist,
             genre=tag.genre,
             track=tag.track,
             track_total=tag.track_total,
@@ -86,8 +86,8 @@ class Playlist:
         self.path = path
         if not os.path.exists(path):
             self.create()
-        self.music_files = self.read()
         self.tree = ET.parse(path)
+        self.music_files = self.read()
 
     def create(self):
         """
@@ -115,13 +115,11 @@ class Playlist:
 
         :return: Une liste des éléments contenus dans le fichier playlist XSPF.
         """
-        tree = ET.parse(self.path)
-        root = tree.getroot()
-        namespace = {'ns': 'http://xspf.org/ns/0/'}
+        namespace = {'ns0': 'http://xspf.org/ns/0/'}
         music_files = []
 
-        for track in root.findall('ns:trackList/ns:track', namespace):
-            location = track.find('ns:location', namespace)
+        for track in self.tree.getroot().findall('ns0:trackList/track', namespace):
+            location = track.find('location', namespace)
             if location is not None:
                 music_files.append(location.text)
 
@@ -149,16 +147,15 @@ class Playlist:
 
         :param tracks_to_remove: Listes de morceaux à supprimer.
         """
-        root = self.tree.getroot()
-        namespace = {'ns': 'http://xspf.org/ns/0/'}
+        namespace = {'ns0': 'http://xspf.org/ns/0/'}
 
-        track_list_element = root.find('ns:trackList', namespace)
+        track_list_element = self.tree.getroot().find('ns0:trackList', namespace)
         if track_list_element is None:
-            print(f"Erreur : La playlist {self.file_path} ne contient pas de balise 'trackList'.")
+            print(f"Erreur : La playlist {self.path} ne contient pas de balise 'trackList'.")
             return
 
-        for track in track_list_element.findall('ns:track', namespace):
-            location = track.find('ns:location', namespace)
+        for track in track_list_element.findall('track', namespace):
+            location = track.find('location', namespace)
             for track_to_remove in tracks_to_remove:
                 if location is not None and location.text == track_to_remove:
                     track_list_element.remove(track)
@@ -176,10 +173,9 @@ class Playlist:
             print(f"Certains fichiers de la liste ne sont pas des fichiers de musique valides.")
             return
 
-        root = self.tree.getroot()
-        namespace = {'ns': 'http://xspf.org/ns/0/'}
+        namespace = {'ns0': 'http://xspf.org/ns/0/'}
 
-        track_list_element = root.find('ns:trackList', namespace)
+        track_list_element = self.tree.getroot().find('ns0:trackList', namespace)
         if track_list_element is None:
             print(f"Erreur : La playlist {self.path} ne contient pas de balise 'trackList'.")
             return
@@ -197,7 +193,7 @@ class Playlist:
             SubElement(track, "album").text = metadata.album
             SubElement(track, "year").text = str(metadata.year)
             SubElement(track, "duration").text = str(int(metadata.duration * 1000))
-            SubElement(track, "album_artist").text = metadata.album_artist
+            SubElement(track, "albumartist").text = metadata.albumartist
             SubElement(track, "genre").text = metadata.genre
             SubElement(track, "track").text = str(metadata.track)
             SubElement(track, "track_total").text = str(metadata.track_total)
