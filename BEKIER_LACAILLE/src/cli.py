@@ -257,7 +257,7 @@ def main():
     args = parser.parse_args()
 
     if args.directory is None and args.file is None:
-        print('Veuillez spécifier un répertoire avec l\'option -d ou un fichier avec l\'option -f')
+        print('Paramètres manquants. Veuillez rajouter -h ou --help pour obtenir de l\'aide.')
     else:
         if args.directory is not None:
             music_explorer = MusicFileExplorer(args.directory)
